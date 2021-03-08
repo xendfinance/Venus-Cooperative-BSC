@@ -7,9 +7,9 @@ import "./Ownable.sol";
 import "./IGroups.sol";
 import "./SafeERC20.sol";
 import "./ICycle.sol";
-import "./IibDUSD.sol";
+import "./IVDai.sol";
 import "./IGroupSchema.sol";
-import "./IDUSDLendingService.sol";
+import "./IVenusLendingService.sol";
 import "./ReentrancyGuard.sol";
 import "./IERC20.sol";
 import "./Address.sol";
@@ -78,15 +78,15 @@ contract XendFinanceGroupContainer_Yearn_V1 is IGroupSchema {
         uint256 totalUnderlyingAmount
     );
 
-    IDUSDLendingService lendingService;
-    IERC20 _dusd;
+    IVenusLendingService lendingService;
+    IERC20 _busd;
     IGroups groupStorage;
     ICycles cycleStorage;
     ITreasury treasury;
     ISavingsConfig savingsConfig;
     IRewardConfig rewardConfig;
     IXendToken xendToken;
-    IibDUSD derivativeToken;
+    IVDai derivativeToken;
 
     address LendingAdapterAddress;
     address TokenAddress;
@@ -704,7 +704,7 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
 
         address recipient = address(this);
         uint256 amountTransferrable =
-            _dusd.allowance(depositorAddress, recipient);
+            _busd.allowance(depositorAddress, recipient);
 
         require(
             amountTransferrable > 0,
@@ -715,7 +715,7 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
             "Token allowance does not cover stake claim"
         );
 
-            _dusd.safeTransferFrom(depositorAddress, recipient, expectedAmount);
+            _busd.safeTransferFrom(depositorAddress, recipient, expectedAmount);
        
 
         return expectedAmount;
@@ -773,11 +773,11 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
         internal
         returns (uint256)
     {
-        uint256 balanceBeforeWithdraw = lendingService.UserDUSDBalance(address(this));
+        uint256 balanceBeforeWithdraw = lendingService.UserDAIBalance(address(this));
 
         lendingService.WithdrawBySharesOnly(derivativeBalance);
 
-        uint256 balanceAfterWithdraw = lendingService.UserDUSDBalance(address(this));
+        uint256 balanceAfterWithdraw = lendingService.UserDAIBalance(address(this));
 
         uint256 amountOfUnderlyingAssetWithdrawn =
             balanceAfterWithdraw.sub(balanceBeforeWithdraw);
@@ -812,7 +812,7 @@ contract XendFinanceGroup_Yearn_V1 is
 
     using SafeERC20 for IERC20;
 
-    using SafeERC20 for IibDUSD; 
+    using SafeERC20 for IVDai; 
 
     using Address for address payable;
 
@@ -827,15 +827,15 @@ contract XendFinanceGroup_Yearn_V1 is
         address xendTokenAddress,
         address derivativeTokenAddress
     ) public {
-        lendingService = IDUSDLendingService(lendingServiceAddress);
-        _dusd = IERC20(tokenAddress);
+        lendingService = IVenusLendingService(lendingServiceAddress);
+        _busd = IERC20(tokenAddress);
         groupStorage = IGroups(groupStorageAddress);
         cycleStorage = ICycles(cycleStorageAddress);
         treasury = ITreasury(treasuryAddress);
         savingsConfig = ISavingsConfig(savingsConfigAddress);
         rewardConfig = IRewardConfig(rewardConfigAddress);
         xendToken = IXendToken(xendTokenAddress);
-        derivativeToken = IibDUSD(derivativeTokenAddress);
+        derivativeToken = IVDai(derivativeTokenAddress);
         TokenAddress = tokenAddress;
         TreasuryAddress = treasuryAddress;
     }
@@ -850,7 +850,7 @@ contract XendFinanceGroup_Yearn_V1 is
         }
 
     function setAdapterAddress() external onlyOwner {
-        LendingAdapterAddress = lendingService.GetDUSDLendingAdapterAddress();
+        LendingAdapterAddress = lendingService.GetVenusLendingAdapterAddress();
     }
 
             function GetTotalTokenRewardDistributed() external view returns(uint256){
@@ -939,7 +939,7 @@ contract XendFinanceGroup_Yearn_V1 is
             .add(totalDeductible);
 
         if (withdrawalResolution.amountToSendToTreasury > 0) {
-            _dusd.approve(
+            _busd.approve(
                 TreasuryAddress,
                 withdrawalResolution.amountToSendToTreasury
             );
@@ -950,7 +950,7 @@ contract XendFinanceGroup_Yearn_V1 is
             withdrawalResolution.amountToSendToMember > 0,
             "After deducting early withdrawal penalties and fees, there's nothing left for you"
         );
-        _dusd.safeTransfer(
+        _busd.safeTransfer(
             cycleMember._address,
             withdrawalResolution.amountToSendToMember
         );
@@ -1107,16 +1107,16 @@ contract XendFinanceGroup_Yearn_V1 is
             .add(finalAmountToChargeAsFees);
 
         if (withdrawalResolution.amountToSendToTreasury > 0) {
-            _dusd.approve(
+            _busd.approve(
                 TreasuryAddress,
                 withdrawalResolution.amountToSendToTreasury
             );
             treasury.depositToken(TokenAddress);
-            _dusd.safeTransfer(_getGroupCreator(cycle.groupId), creatorReward);
+            _busd.safeTransfer(_getGroupCreator(cycle.groupId), creatorReward);
         }
 
         if (withdrawalResolution.amountToSendToMember > 0) {
-            _dusd.safeTransfer(
+            _busd.safeTransfer(
                 cycleMember._address,
                 withdrawalResolution.amountToSendToMember
             );
@@ -1556,7 +1556,7 @@ contract XendFinanceGroup_Yearn_V1 is
         internal
         returns (uint256)
     {
-        _dusd.approve(LendingAdapterAddress, underlyingTotalDeposits);
+        _busd.approve(LendingAdapterAddress, underlyingTotalDeposits);
 
         uint256 balanceBeforeDeposit = lendingService.UserShares(address(this));
 
