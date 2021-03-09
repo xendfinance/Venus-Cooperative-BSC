@@ -3,7 +3,7 @@
 pragma solidity 0.6.6;
 import "./ISavingsConfig.sol";
 import "./ITreasury.sol";
-import "./Ownable.sol";
+// import "./Ownable.sol";
 import "./IGroups.sol";
 import "./SafeERC20.sol";
 import "./ICycle.sol";
@@ -12,7 +12,7 @@ import "./IGroupSchema.sol";
 import "./IVenusLendingService.sol";
 import "./ReentrancyGuard.sol";
 import "./IERC20.sol";
-import "./Address.sol";
+// import "./Address.sol";
 import "./IRewardConfig.sol";
 import "./SafeMath.sol";
 import "./IXendToken.sol";
@@ -113,6 +113,8 @@ contract XendFinanceGroupContainer_Yearn_V1 is IGroupSchema {
     }
 }
 
+
+
 contract XendFinanceGroupHelpers is XendFinanceGroupContainer_Yearn_V1 {
     function _updateGroup(Group memory group) internal {
         uint256 index = _getGroupIndex(group.id);
@@ -208,34 +210,6 @@ contract XendFinanceGroupHelpers is XendFinanceGroupContainer_Yearn_V1 {
         return GroupMember(true, depositor, groupId);
     }
 
-    function doesGroupExist(uint256 groupId) internal view returns (bool) {
-        return _doesGroupExist(groupId);
-    }
-
-    function doesGroupNameExist(uint256 groupName)
-        internal
-        view
-        returns (bool)
-    {
-        return _doesGroupExist(groupName);
-    }
-
-    function _doesGroupExist(uint256 groupId) internal view returns (bool) {
-        bool groupExist = groupStorage.doesGroupExist(groupId);
-
-        return groupExist;
-    }
-
-    function _doesGroupExist(string memory groupName)
-        internal
-        view
-        returns (bool)
-    {
-        bool groupExist = groupStorage.doesGroupExist(groupName);
-
-        return groupExist;
-    }
-
     function _getGroup(uint256 groupId) internal view returns (Group memory) {
         return _getGroupById(groupId);
     }
@@ -272,7 +246,7 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
         uint256 maximumsSlots,
         bool hasMaximumSlots
     ) internal {
-        bool doesGroupExist = doesGroupExist(groupId);
+        bool doesGroupExist = groupStorage.doesGroupExist(groupId);
 
         require(doesGroupExist, "Group not found");
 
@@ -731,30 +705,6 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
         return cycleMember;
     }
 
-    function _processMemberDeposit(
-        uint256 numberOfStakes,
-        uint256 amountForStake,
-        address payable depositorAddress
-    ) internal returns (uint256 underlyingAmount) {
-        uint256 expectedAmount = numberOfStakes.mul(amountForStake);
-
-        address recipient = address(this);
-        uint256 amountTransferrable =
-            _busd.allowance(depositorAddress, recipient);
-
-        require(
-            amountTransferrable > 0,
-            "Approve an amount > 0 for token before proceeding"
-        );
-        require(
-            amountTransferrable >= expectedAmount,
-            "Token allowance does not cover stake claim"
-        );
-
-        _busd.safeTransferFrom(depositorAddress, recipient, expectedAmount);
-
-        return expectedAmount;
-    }
 
     function _endCycle(uint256 cycleId)
         internal
@@ -1611,7 +1561,7 @@ contract XendFinanceGroup_Yearn_V1 is
         require(symbolInBytes.length > 0, "Group sysmbol cannot be empty");
 
         require(
-            groupStorage.doesGroupExist(name),
+            !groupStorage.doesGroupExist(name),
             "Group name has already been used"
         );
     }
