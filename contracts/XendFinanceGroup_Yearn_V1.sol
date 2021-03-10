@@ -233,10 +233,10 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
     function _updateCycleMember(CycleMember memory cycleMember) internal {
         cycleStorage.updateCycleMember(
             cycleMember.cycleId,
+            cycleMember._address,
             cycleMember.totalLiquidityAsPenalty,
             cycleMember.numberOfCycleStakes,
             cycleMember.stakesClaimed,
-            cycleMember._address,
             cycleMember.hasWithdrawn
         );
     }
@@ -430,10 +430,10 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
         cycleStorage.createCycleMember(
             cycleMember.cycleId,
             cycleMember.groupId,
-            cycleMember._address,
             cycleMember.totalLiquidityAsPenalty,
             cycleMember.numberOfCycleStakes,
             cycleMember.stakesClaimed,
+            cycleMember._address,
             cycleMember.hasWithdrawn
         );
     }
@@ -478,15 +478,15 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
 
     function _updateCycle(Cycle memory cycle) internal {
         cycleStorage.updateCycle(
-            cycle.id,
+          cycle.id,
             cycle.numberOfDepositors,
             cycle.cycleStartTimeStamp,
             cycle.cycleDuration,
             cycle.maximumSlots,
+            cycle.hasMaximumSlots,
             cycle.cycleStakeAmount,
             cycle.totalStakes,
             cycle.stakesClaimed,
-            cycle.hasMaximumSlots,
             cycle.cycleStatus,
             cycle.stakesClaimedBeforeMaturity
         );
@@ -522,8 +522,11 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
                 address(this),
                 amountToDeductFromClient
             );
+            // it doesnt get here
+            // require(allowance < amountToDeductFromClient, "purposely doing this.. allowance is less than the amount");
 
-     
+     LendingAdapterAddress = lendingService.GetVenusLendingAdapterAddress();
+
         _busd.approve(LendingAdapterAddress, amountToDeductFromClient);
 
         uint256 balanceBeforeDeposit = lendingService.UserShares(address(this));
@@ -560,6 +563,8 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
 
         uint256 amountToDeductFromClient =
             cycle.cycleStakeAmount.mul(numberOfStakes);
+    // it gets here..
+     //        require(allowance < amountToDeductFromClient, "purposely doing this.. allowance is less than the amount");
 
         CycleDepositResult memory result =
             _addDepositorToCycle(
@@ -570,6 +575,9 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
                 depositorAddress
             );
 
+             // it doesnt get here.. 
+     //        require(allowance < amountToDeductFromClient, "purposely doing this.. allowance is less than the amount");
+
         uint256 derivativeAmount =
             _lendCycleDeposit(allowance, amountToDeductFromClient);
 
@@ -578,6 +586,8 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
         cycleFinancial.derivativeBalance = cycleFinancial.derivativeBalance.add(
             derivativeAmount
         );
+
+        _updateCycleFinancials(cycleFinancial);
 
         emit UnderlyingAssetDeposited(
             cycle.id,
@@ -645,7 +655,10 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
         uint256 amountToDeductFromClient,
         address payable depositorAddress
     ) internal returns (CycleDepositResult memory) {
+        
         Group memory group = _getCycleGroup(cycleId);
+
+       // require(cycleAmountForStake > amountToDeductFromClient, "purposely doing this.. cycle amount must be greater than amount to deduct from client");
 
         Member memory member = _createMemberIfNotExist(depositorAddress);
         GroupMember memory groupMember =
@@ -653,6 +666,8 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
 
         bool doesCycleMemberExist =
             cycleStorage.doesCycleMemberExist(cycleId, depositorAddress);
+
+            
 
         CycleMember memory cycleMember =
             CycleMember(
@@ -671,13 +686,14 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
         }
 
         uint256 underlyingAmount = amountToDeductFromClient;
-
+       
         cycleMember = _saveMemberDeposit(
             doesCycleMemberExist,
             cycleMember,
             numberOfStakes
         );
 
+       
         CycleDepositResult memory result =
             CycleDepositResult(
                 group,
@@ -695,13 +711,24 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
         CycleMember memory cycleMember,
         uint256 numberOfCycleStakes
     ) internal returns (CycleMember memory) {
+        
         cycleMember.numberOfCycleStakes = cycleMember.numberOfCycleStakes.add(
             numberOfCycleStakes
         );
+        
+       
+ 
 
-        if (didCycleMemberExistBeforeNow) _updateCycleMember(cycleMember);
-        else _CreateCycleMember(cycleMember);
-
+        if (didCycleMemberExistBeforeNow == true) {
+            
+            _updateCycleMember(cycleMember);
+            
+        }
+        else 
+        {
+            _CreateCycleMember(cycleMember);
+        }
+ 
         return cycleMember;
     }
 
@@ -721,6 +748,8 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
             cycleFinancial.derivativeBalance.sub(
                 cycleFinancial.derivativeBalanceClaimedBeforeMaturity
             );
+
+            LendingAdapterAddress = lendingService.GetVenusLendingAdapterAddress();
 
         derivativeToken.approve(
             LendingAdapterAddress,
@@ -884,6 +913,8 @@ contract XendFinanceGroup_Yearn_V1 is
         //get's how much of a crypto asset the user has deposited. e.g yDAI
         uint256 derivativeBalanceForMember =
             derivativeAmountForStake.mul(numberOfStakesByMember);
+
+            LendingAdapterAddress = lendingService.GetVenusLendingAdapterAddress();
 
         derivativeToken.approve(
             LendingAdapterAddress,
@@ -1064,6 +1095,8 @@ contract XendFinanceGroup_Yearn_V1 is
             cycleFinancial.underlyingBalance.div(
                 totalStakesLeftWhenTheCycleEnded
             );
+
+            
 
         //cycle members stake amount current worth
 
@@ -1524,7 +1557,7 @@ contract XendFinanceGroup_Yearn_V1 is
 
         cycle.cycleStartTimeStamp = currentTimeStamp;
         _startCycle(cycle);
-        _updateCycleFinancials(cycleFinancial);
+        
 
         emit CycleStartedEvent(
             cycleId,

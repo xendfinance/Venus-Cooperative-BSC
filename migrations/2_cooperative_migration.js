@@ -104,30 +104,7 @@ module.exports = function (deployer) {
     groupsContract = await GroupsContract.deployed();
     xendGroup = await XendFinanceGroup.deployed();
 
-    await savingsConfigContract.createRule("XEND_FINANCE_COMMISION_DIVISOR", 0, 0, 100, 1)
-
-    await savingsConfigContract.createRule("XEND_FINANCE_COMMISION_DIVIDEND", 0, 0, 1, 1)
-
-    await savingsConfigContract.createRule("PERCENTAGE_PAYOUT_TO_USERS", 0, 0, 0, 1)
-
-    await savingsConfigContract.createRule("PERCENTAGE_AS_PENALTY", 0, 0, 1, 1);
-
-    await cyclesContract.activateStorageOracle(XendFinanceGroup.address);
-
-    await groupsContract.activateStorageOracle(XendFinanceGroup.address);
-
-    await xendGroup.setAdapterAddress();
-
-    await xendGroup.setGroupCreatorRewardPercent("100");
-
-    //0. update fortube adapter
-    await venusLendingService.updateAdapter(VenusAdapter.address)
-
-     //12.
-     await rewardConfigContract.SetRewardParams("100000000000000000000000000", "10000000000000000000000000", "2", "7", "10","15", "4","60", "4");
-
-     //13. 
-     await rewardConfigContract.SetRewardActive(true);
+   
    
 
     

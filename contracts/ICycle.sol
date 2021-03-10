@@ -3,10 +3,9 @@ import "./IGroupSchema.sol";
 pragma experimental ABIEncoderV2;
 
 interface ICycles is IGroupSchema {
-
-    function getCycles() external view returns (Cycle [] memory);
-
     function getCyclesLength() external view returns (uint256);
+
+    function getCycles() external view returns (Cycle[] memory);
 
     function getCycleInfoByIndex(uint256 index)
         external
@@ -85,19 +84,19 @@ interface ICycles is IGroupSchema {
     function createCycleMember(
         uint256 cycleId,
         uint256 groupId,
-        address payable depositor,
         uint256 totalLiquidityAsPenalty,
         uint256 numberOfCycleStakes,
         uint256 stakesClaimed,
+        address payable depositor,
         bool hasWithdrawn
     ) external;
 
     function updateCycleMember(
         uint256 cycleId,
+        address payable depositor,
         uint256 totalLiquidityAsPenalty,
         uint256 numberOfCycleStakes,
         uint256 stakesClaimed,
-         address payable depositor,
         bool hasWithdrawn
     ) external;
 
@@ -132,10 +131,10 @@ interface ICycles is IGroupSchema {
         uint256 startTimeStamp,
         uint256 duration,
         uint256 maximumSlots,
+        bool hasMaximumSlots,
         uint256 cycleStakeAmount,
         uint256 totalStakes,
         uint256 stakesClaimed,
-         bool hasMaximumSlots,
         CycleStatus cycleStatus,
         uint256 stakesClaimedBeforeMaturity
     ) external;
@@ -167,6 +166,11 @@ interface ICycles is IGroupSchema {
         uint256 recordIndexLocation
     ) external view returns (bool, uint256);
 
+    function getRecordIndexForGroupCycle(
+        uint256 groupId,
+        uint256 recordIndexLocation
+    ) external view returns (bool, uint256);
+
     function getRecordIndexLengthForCycleMembers(uint256 cycleId)
         external
         view
@@ -185,6 +189,8 @@ interface ICycles is IGroupSchema {
         external
         view
         returns (uint256);
+
+    function getCycleMembersLength() external view returns (uint256);
 
     function doesCycleMemberExist(uint256 cycleId, address depositor)
         external
