@@ -15,6 +15,8 @@ const ClientRecordContract = artifacts.require("ClientRecord");
 
 const SavingsConfigContract = artifacts.require("SavingsConfig");
 
+const EsusuServiceContract = artifacts.require('EsusuService');
+
 const VenusAdapter = artifacts.require("VenusAdapter");
 const VenusLendingService = artifacts.require("VenusLendingService");
 
@@ -29,6 +31,10 @@ const busdAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56";
 const daiContract = new web3.eth.Contract(DaiContractABI, busdAddress);
 
 const unlockedAddress = "0x631fc1ea2270e98fbd9d92658ece0f5a269aa161";
+
+const EsusuAdapterContract = artifacts.require('EsusuAdapter');
+const EsusuAdapterWithdrawalDelegateContract = artifacts.require('EsusuAdapterWithdrawalDelegate');
+const EsusuStorageContract = artifacts.require('EsusuStorage');
 
 //  Approve a smart contract address or normal address to spend on behalf of the owner
 async function approveDai(spender, owner, amount) {
@@ -71,6 +77,10 @@ contract("XendFinanceGroup_Yearn_v1", () => {
   let xendGroupsContract = null;
   let cycleContract = null;
   let groupsContract = null;
+  let esusuAdapterContract = null;
+    let esusuAdapterWithdrawalDelegateContract = null;
+    let esusuStorageContract = null;
+    let esusuServiceContract = null;
 
   before(async () => {
     savingsConfigContract = await SavingsConfigContract.deployed();
@@ -82,6 +92,10 @@ contract("XendFinanceGroup_Yearn_v1", () => {
     cycleContract = await CycleContract.deployed();
     groupsContract = await GroupsContract.deployed();
     xendGroupsContract = await XendFinanceGroup.deployed();
+    esusuAdapterWithdrawalDelegateContract = await EsusuAdapterWithdrawalDelegateContract.deployed();
+    esusuStorageContract = await EsusuStorageContract.deployed();
+    esusuAdapterContract = await EsusuAdapterContract.deployed();
+    esusuServiceContract = await EsusuServiceContract.deployed();
 
     await savingsConfigContract.createRule(
       "XEND_FINANCE_COMMISION_DIVISOR",
@@ -118,6 +132,7 @@ contract("XendFinanceGroup_Yearn_v1", () => {
     console.log("set adapter address");
 
     await xendGroupsContract.setGroupCreatorRewardPercent("100");
+    
 
     //0. update fortube adapter
     await venusLendingService.updateAdapter(VenusAdapter.address);
@@ -136,8 +151,50 @@ contract("XendFinanceGroup_Yearn_v1", () => {
     );
 
     //13.
-    await rewardConfigContract.SetRewardActive(false);
+    await rewardConfigContract.SetRewardActive(true);
 
+              //3. Update the DaiLendingService Address in the EsusuAdapter Contract
+              await esusuAdapterContract.UpdateDaiLendingService(venusLendingService.address);
+              console.log("3->VenusLendingService Address Updated In EsusuAdapter ...");
+  
+              //4. Update the EsusuAdapter Address in the EsusuService Contract
+              await esusuServiceContract.UpdateAdapter(esusuAdapterContract.address);
+              console.log("4->EsusuAdapter Address Updated In EsusuService ...");
+  
+              //5. Activate the storage oracle in Groups.sol with the Address of the EsusuApter
+              await  groupsContract.activateStorageOracle(esusuAdapterContract.address);
+              console.log("5->EsusuAdapter Address Updated In Groups contract ...");
+  
+              //6. Xend Token Should Grant access to the  Esusu Adapter Contract
+              await xendTokenContract.grantAccess(esusuAdapterContract.address);
+              console.log("6->Xend Token Has Given access To Esusu Adapter to transfer tokens ...");
+  
+              //7. Esusu Adapter should Update Esusu Adapter Withdrawal Delegate
+              await esusuAdapterContract.UpdateEsusuAdapterWithdrawalDelegate(esusuAdapterWithdrawalDelegateContract.address);
+              console.log("7->EsusuAdapter Has Updated Esusu Adapter Withdrawal Delegate Address ...");
+  
+              //8. Esusu Adapter Withdrawal Delegate should Update Dai Lending Service
+              await esusuAdapterWithdrawalDelegateContract.UpdateDaiLendingService(venusLendingService.address);
+              console.log("8->Esusu Adapter Withdrawal Delegate Has Updated Dai Lending Service ...");
+  
+              //9. Esusu Service should update esusu adapter withdrawal delegate
+              await esusuServiceContract.UpdateAdapterWithdrawalDelegate(esusuAdapterWithdrawalDelegateContract.address);
+              console.log("9->Esusu Service Contract Has Updated  Esusu Adapter Withdrawal Delegate Address ...");
+  
+              //10. Esusu Storage should Update Adapter and Adapter Withdrawal Delegate
+              await esusuStorageContract.UpdateAdapterAndAdapterDelegateAddresses(esusuAdapterContract.address,esusuAdapterWithdrawalDelegateContract.address);
+              console.log("10->Esusu Storage Contract Has Updated  Esusu Adapter and Esusu Adapter Withdrawal Delegate Address ...");
+  
+              //11. Xend Token Should Grant access to the  Esusu Adapter Withdrawal Delegate Contract
+              await xendTokenContract.grantAccess(esusuAdapterWithdrawalDelegateContract.address);
+              console.log("11->Xend Token Has Given access To Esusu Adapter Withdrawal Delegate to transfer tokens ...");
+  
+             //12. Set Group Creator Reward Percentage
+             await esusuAdapterWithdrawalDelegateContract.setGroupCreatorRewardPercent(10);
+             console.log("11-> Group Creator reward set on ESUSU Withdrawal Delegate ...");
+
+    await xendTokenContract.grantAccess(XendFinanceGroup.address);
+    console.log("11->Xend Token Has Given access To Xend groups contract to transfer tokens ...");
     //  Get the addresses and Balances of at least 2 accounts to be used in the test
     //  Send DAI to the addresses
     web3.eth.getAccounts().then(function (accounts) {
@@ -195,7 +252,7 @@ contract("XendFinanceGroup_Yearn_v1", () => {
   });
 
   it("should create a cycle and join with account one and two", async () => {
-    let duration = "1";
+    let duration = "30";
     let startTimeStamp = "2";
     let groupId = "1";
     let maximumSlots = "2";
@@ -248,8 +305,79 @@ contract("XendFinanceGroup_Yearn_v1", () => {
     );
   });
 
-  it("should start a cycle and the first member should withdraw from cycle", async () => {
+  it("should withdraw from ongoin cycle", async () => {
     await xendGroupsContract.activateCycle("1");
+
+    //const pricePerFullShare = await venusAdapter.GetPricePerFullShare();
+    // const waitTime = (seconds) =>
+    //   new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+
+    // await waitTime(20);
+
+   // console.log(waitTime, "waiting time");
+
+    let balanceBeforeWithdrawal = await daiContract.methods
+    .balanceOf(account1)
+    .call();
+
+  console.log(
+    `Recipient: ${account1} DAI Balance before withdrawal: ${balanceBeforeWithdrawal}`
+  );
+
+
+    let result = await xendGroupsContract.withdrawFromCycleWhileItIsOngoing("1");
+
+    let balanceAfterWithdrawal = await daiContract.methods
+    .balanceOf(account1)
+    .call();
+
+  console.log(
+    `Recipient: ${account1} DAI Balance after withdrawal: ${balanceAfterWithdrawal}`
+  );
+
+    assert(balanceAfterWithdrawal > balanceBeforeWithdrawal)
+
+    assert(result.receipt.status == true)
+  })
+
+  it("should start a cycle and the first member should withdraw from cycle", async () => {
+
+    let duration = "5";
+    let startTimeStamp = "2";
+    let groupId = "1";
+    let maximumSlots = "2";
+    let hasMaximumSlots = false;
+    let cycleStakeAmount = BigInt(100000000000000000000);
+    let cycleResult = await xendGroupsContract.createCycle(
+      groupId,
+      startTimeStamp,
+      duration,
+      maximumSlots,
+      hasMaximumSlots,
+      cycleStakeAmount
+    );
+    assert(cycleResult.receipt.status == true);
+    //console.log(cycleResult.receipt.status, "cycle result");
+
+    /** joining cycle event */
+    let approvedAmount = BigInt(100000000000000000000);
+
+    await sendDai(approvedAmount, account1);
+
+    await sendDai(approvedAmount, account2);
+
+    await approveDai(xendGroupsContract.address, account1, approvedAmount);
+
+    await approveDai(xendGroupsContract.address, account2, approvedAmount);
+
+    //await xendGroupsContract.setAdapterAddress();
+
+    await xendGroupsContract.joinCycle("2", "1", { from: account1 });
+
+    await xendGroupsContract.joinCycle("2", "1", { from: account2 });
+
+
+  await xendGroupsContract.activateCycle("2");
 
     //const pricePerFullShare = await venusAdapter.GetPricePerFullShare();
     const waitTime = (seconds) =>
@@ -268,9 +396,9 @@ contract("XendFinanceGroup_Yearn_v1", () => {
   );
 
 
-    await xendGroupsContract.withdrawFromCycle("1");
+    await xendGroupsContract.withdrawFromCycle("2");
 
-    let cycleInfoResult = await cycleContract.getCycleInfoById("1");
+    let cycleInfoResult = await cycleContract.getCycleInfoById("2");
 
     // let cycleMemberIndex = await cycleContract.getCycleMemberIndex(BigInt(cycleInfoResult[0]), account1);
 
@@ -310,8 +438,9 @@ assert(balanceAfterWithdrawal > balanceBeforeWithdrawal)
       `ctotalLiquidityAsPenalty::  ${BigInt(cycleMember[3])}`,
       `number of cycle stakes:  ${BigInt(cycleMember[4])}`,
       `stakes claimed:  ${BigInt(cycleMember[5])}`,
-      ` has withdrawn:  ${BigInt(cycleMember[6])}`,
+      ` cycle status:  ${BigInt(cycleMember[6])}`,
       "cycle info"
     );
   });
+
 });

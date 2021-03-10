@@ -7,7 +7,7 @@ import "./ITreasury.sol";
 import "./IGroups.sol";
 import "./SafeERC20.sol";
 import "./ICycle.sol";
-import "./IVDai.sol";
+import "./IVBUSD.sol";
 import "./IGroupSchema.sol";
 import "./IVenusLendingService.sol";
 import "./ReentrancyGuard.sol";
@@ -85,7 +85,7 @@ contract XendFinanceGroupContainer_Yearn_V1 is IGroupSchema {
     ISavingsConfig savingsConfig;
     IRewardConfig rewardConfig;
     IXendToken xendToken;
-    IVDai derivativeToken;
+    IVBUSD derivativeToken;
 
     address LendingAdapterAddress;
     address TokenAddress;
@@ -828,7 +828,7 @@ contract XendFinanceGroup_Yearn_V1 is
 
     using SafeERC20 for IERC20;
 
-    using SafeERC20 for IVDai;
+    using SafeERC20 for IVBUSD;
 
     using Address for address payable;
 
@@ -851,7 +851,7 @@ contract XendFinanceGroup_Yearn_V1 is
         savingsConfig = ISavingsConfig(savingsConfigAddress);
         rewardConfig = IRewardConfig(rewardConfigAddress);
         xendToken = IXendToken(xendTokenAddress);
-        derivativeToken = IVDai(derivativeTokenAddress);
+        derivativeToken = IVBUSD(derivativeTokenAddress);
         TokenAddress = tokenAddress;
         TreasuryAddress = treasuryAddress;
     }
@@ -951,9 +951,9 @@ contract XendFinanceGroup_Yearn_V1 is
                 underlyingAmountThatMemberDepositIsWorth
             );
 
-        withdrawalResolution.amountToSendToTreasury = withdrawalResolution
-            .amountToSendToTreasury
-            .add(totalDeductible);
+        // withdrawalResolution.amountToSendToTreasury = withdrawalResolution
+        //     .amountToSendToTreasury
+        //     .add(totalDeductible);
 
         if (withdrawalResolution.amountToSendToTreasury > 0) {
             _busd.approve(
@@ -962,6 +962,7 @@ contract XendFinanceGroup_Yearn_V1 is
             );
             treasury.depositToken(TokenAddress);
         }
+        
 
         require(
             withdrawalResolution.amountToSendToMember > 0,

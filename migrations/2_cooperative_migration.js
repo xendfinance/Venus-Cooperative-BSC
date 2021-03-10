@@ -12,6 +12,9 @@ const EsusuServiceContract = artifacts.require("EsusuService");
 const CycleContract = artifacts.require("Cycles")
 const busdAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"
 const vbusdAddress = "0x95c78222B3D6e262426483D42CfA53685A67Ab9D"
+const EsusuAdapterContract = artifacts.require('EsusuAdapter');
+const EsusuAdapterWithdrawalDelegateContract = artifacts.require('EsusuAdapterWithdrawalDelegate');
+const EsusuStorageContract = artifacts.require('EsusuStorage');
 const XendFinanceGroup = artifacts.require("XendFinanceGroup_Yearn_V1.sol");
 // const web3 = new Web3("HTTP://127.0.0.1:8545");
 // const daiContract = new web3.eth.Contract(DaiContractABI, DaiContractAddress);
@@ -73,6 +76,30 @@ module.exports = function (deployer) {
       "VenusAdapter address: " + VenusAdapter.address
     );
 
+
+
+
+    await deployer.deploy(EsusuStorageContract);
+
+    //  address payable serviceContract, address esusuStorageContract, address esusuAdapterContract,
+    //                 string memory feeRuleKey, address treasuryContract, address rewardConfigContract, address xendTokenContract
+
+     await deployer.deploy(EsusuAdapterContract,
+                            EsusuServiceContract.address,
+                            GroupsContract.address,
+                            EsusuStorageContract.address);
+
+      await deployer.deploy(EsusuAdapterWithdrawalDelegateContract,
+                              EsusuServiceContract.address,
+                              EsusuStorageContract.address,
+                              EsusuAdapterContract.address,
+                              "esusufee",
+                              TreasuryContract.address,
+                              RewardConfigContract.address,
+                              XendTokenContract.address,
+                              SavingsConfigContract.address);
+
+
     await deployer.deploy(
         XendFinanceGroup,
         VenusLendingService.address,
@@ -94,6 +121,9 @@ module.exports = function (deployer) {
     let xendTokenContract = null;
     let cyclesContract = null;
     let groupsContract = null;
+    let esusuAdapterContract = null;
+    let esusuAdapterWithdrawalDelegateContract = null;
+    let esusuStorageContract = null;
     let xendGroup  = null;
 
     savingsConfigContract = await SavingsConfigContract.deployed();
@@ -101,6 +131,9 @@ module.exports = function (deployer) {
     rewardConfigContract = await RewardConfigContract.deployed();
     xendTokenContract = await XendTokenContract.deployed();
     cyclesContract = await CycleContract.deployed();
+    esusuAdapterWithdrawalDelegateContract = await EsusuAdapterWithdrawalDelegateContract.deployed();
+    esusuStorageContract = await EsusuStorageContract.deployed();
+    esusuAdapterContract = await EsusuAdapterContract.deployed();
     groupsContract = await GroupsContract.deployed();
     xendGroup = await XendFinanceGroup.deployed();
 
