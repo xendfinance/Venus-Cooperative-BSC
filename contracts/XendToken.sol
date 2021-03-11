@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.6.6;
-import "./Context.sol";
 import "./ERC20Pausable.sol";
-import "./ERC20Burnable.sol";
 import "./ERC20.sol";
 import "./SafeMath.sol";
 
@@ -38,19 +36,19 @@ contract XendToken is ERC20Pausable {
         uint256 totalSupply
     ) public ERC20(name, symbol, decimals, totalSupply) {}
 
-    receive() external payable {
-        address sender = address(this);
+    // receive() external payable {
+    //     address sender = address(this);
 
-        address recipient = msg.sender;
+    //     address recipient = msg.sender;
 
-        uint256 decimal = decimals();
-        uint256 amount = msg.value.mul(10**uint256(decimal)).div(_price); // calculates the amount
+    //     uint256 decimal = decimals();
+    //     uint256 amount = msg.value.mul(10**uint256(decimal)).div(_price); // calculates the amount
 
-        _transfer(sender, recipient, amount);
-    }
+    //     _transfer(sender, recipient, amount);
+    // }
 
     function mint(uint256 amount) public virtual onlyOwner {
-        address account = address(this);
+        address account = msg.sender;
         _mint(account, amount);
     }
 
@@ -59,7 +57,7 @@ contract XendToken is ERC20Pausable {
         virtual
         onlyMinter
     {
-        _transfer(address(this), recipient, amount);
+        _transfer(owner, recipient, amount);
     }
 
     function withdraw() public virtual onlyOwner {
@@ -67,11 +65,17 @@ contract XendToken is ERC20Pausable {
         msg.sender.transfer(etherBalance);
     }
 
+    function withdrawTokens() public virtual onlyOwner{
+        address contractAddress = address(this);
+        uint tokenBalance = balanceOf(contractAddress);
+        _transfer(contractAddress,owner,tokenBalance);
+    }
+
     function price() public view returns (uint256) {
         return _price;
     }
 
-    function SetPrice(uint256 priceInWei) public {
+    function SetPrice(uint256 priceInWei) public onlyOwner {
         _price = priceInWei;
     }
 

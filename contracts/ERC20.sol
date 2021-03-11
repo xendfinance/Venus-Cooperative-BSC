@@ -6,7 +6,6 @@ import "./Context.sol";
 import "./IERC20.sol";
 import "./SafeMath.sol";
 import "./Address.sol";
-import "./Ownable.sol";
 import "./XendTokenMinters.sol";
 
 /**
@@ -67,8 +66,10 @@ contract ERC20 is Context, XendTokenMinters, IERC20 {
         _decimals = decimals;
         _totalSupply = totalSupply;
 
-        _totalSupply = _totalSupply.add(totalSupply);
-        _balances[address(this)] = _balances[address(this)].add(totalSupply);
+        _totalSupply = totalSupply;
+        _balances[msg.sender] = totalSupply;
+
+        emit Transfer(address(0), msg.sender, totalSupply);
     }
 
     /**
@@ -349,16 +350,7 @@ contract ERC20 is Context, XendTokenMinters, IERC20 {
         emit Approval(owner, spender, amount);
     }
 
-    /**
-     * @dev Sets {decimals} to a value other than the default one of 18.
-     *
-     * WARNING: This function should only be called from the constructor. Most
-     * applications that interact with token contracts will not expect
-     * {decimals} to ever change, and may work incorrectly if it does.
-     */
-    function _setupDecimals(uint8 decimals_) internal {
-        _decimals = decimals_;
-    }
+   
 
     /**
      * @dev Hook that is called before any transfer of tokens. This includes
