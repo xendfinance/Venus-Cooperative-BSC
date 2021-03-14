@@ -43,12 +43,12 @@ contract VenusLendingService {
         _venusLendingAdapter.WithdrawBySharesOnly(msg.sender, sharesAmount);
     }
 
-    function UserDAIBalance(address user) external view returns (uint256) {
-        return _venusLendingAdapter.GetDAIBalance(user);
+    function UserBUSDBalance(address user) external view returns (uint256) {
+        return _venusLendingAdapter.GetBUSDBalance(user);
     }
 
     function UserShares(address user) external view returns (uint256) {
-        return _venusLendingAdapter.GetVDaiBalance(user);
+        return _venusLendingAdapter.GetVBUSDBalance(user);
     }
 
     function GetVenusLendingAdapterAddress() external view returns (address) {
@@ -58,8 +58,8 @@ contract VenusLendingService {
         
         return _venusLendingAdapter.GetPricePerFullShare();
     }
-
-      modifier onlyOwner() {
+    
+    modifier onlyOwner() {
         require(_owner == msg.sender, "Only owner can make this call");
         _;
     }

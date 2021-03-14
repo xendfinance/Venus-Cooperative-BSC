@@ -190,7 +190,7 @@ contract("XendFinanceGroup_Yearn_v1", () => {
               console.log("11->Xend Token Has Given access To Esusu Adapter Withdrawal Delegate to transfer tokens ...");
   
              //12. Set Group Creator Reward Percentage
-             await esusuAdapterWithdrawalDelegateContract.setGroupCreatorRewardPercent(10);
+             await esusuAdapterWithdrawalDelegateContract.setGroupCreatorRewardPercent(100);
              console.log("11-> Group Creator reward set on ESUSU Withdrawal Delegate ...");
 
     await xendTokenContract.grantAccess(XendFinanceGroup.address);
@@ -243,12 +243,12 @@ contract("XendFinanceGroup_Yearn_v1", () => {
     assert(xendGroupsContract.address !== "");
   });
 
-  it("Should create a group with account 1", async () => {
+  it("Should create a group with account 1 and account 2", async () => {
     await xendGroupsContract.createGroup("Njoku Master", "NJ");
 
-    let groupInfo = await xendGroupsContract.getGroupById("1");
+    await xendGroupsContract.createGroup("Njoku Jell", "NJL", {from: account2});
 
-    //assert(BigInt(groupInfo[0].exists) == true);
+
   });
 
   it("should create a cycle and join with account one and two", async () => {
@@ -266,6 +266,15 @@ contract("XendFinanceGroup_Yearn_v1", () => {
       hasMaximumSlots,
       cycleStakeAmount.toString()
     );
+
+    await xendGroupsContract.createCycle(
+      "2",
+      startTimeStamp,
+      duration,
+      maximumSlots,
+      hasMaximumSlots,
+      cycleStakeAmount, {from:account2}
+    );
     assert(cycleResult.receipt.status == true);
     //console.log(cycleResult.receipt.status, "cycle result");
 
@@ -280,68 +289,95 @@ contract("XendFinanceGroup_Yearn_v1", () => {
 
     await approveDai(xendGroupsContract.address, account2, approvedAmount);
 
-    //await xendGroupsContract.setAdapterAddress();
+    await xendGroupsContract.setAdapterAddress();
 
     await xendGroupsContract.joinCycle("1", "1", { from: account1 });
 
-    await xendGroupsContract.joinCycle("1", "1", { from: account2 });
+    // //await xendGroupsContract.joinCycle("1", "1", { from: account2 });
+
+    let groupInfo = await xendGroupsContract.getCycleByGroup("1", "0");
+
+    console.log(
+      `cycle id: ${BigInt(groupInfo[0])}`,
+      `grouop id:  ${BigInt(groupInfo[1])}`,
+      `number of depositors:  ${BigInt(groupInfo[2])}`,
+      `cycle start time:  ${BigInt(groupInfo[3])}`,
+      `cycle duration:  ${BigInt(groupInfo[4])}`,
+      `maximum slots:  ${BigInt(groupInfo[5])}`,
+      ` has maximum slots:  ${BigInt(groupInfo[6])}`,
+      `cycle stake amount:  ${BigInt(groupInfo[7])}`,
+      `total stakes:  ${BigInt(groupInfo[8])}`,
+      `stake claimed:  ${BigInt(groupInfo[9])}`,
+      `cycle status:  ${BigInt(groupInfo[10])}`,
+      `stakes claimed before maturity:  ${BigInt(groupInfo[11])}`,
+      "cycle info"
+    );
+
+    let groupInfo2 = await xendGroupsContract.getCycleByGroup("2", "0");
+
+    console.log(
+      `cycle id: ${BigInt(groupInfo2[0])}`,
+      `grouop id:  ${BigInt(groupInfo2[1])}`,
+      `number of depositors:  ${BigInt(groupInfo2[2])}`,
+      `cycle start time:  ${BigInt(groupInfo2[3])}`,
+      `cycle duration:  ${BigInt(groupInfo2[4])}`,
+      `maximum slots:  ${BigInt(groupInfo2[5])}`,
+      ` has maximum slots:  ${BigInt(groupInfo2[6])}`,
+      `cycle stake amount:  ${BigInt(groupInfo2[7])}`,
+      `total stakes:  ${BigInt(groupInfo2[8])}`,
+      `stake claimed:  ${BigInt(groupInfo2[9])}`,
+      `cycle status:  ${BigInt(groupInfo2[10])}`,
+      `stakes claimed before maturity:  ${BigInt(groupInfo2[11])}`,
+      "cycle info"
+    );
 
     let result = await cycleContract.getCycleInfoById("1");
 
-    console.log(
-      `cycle id: ${BigInt(result[0])}`,
-      `grouop id:  ${BigInt(result[1])}`,
-      `number of depositors:  ${BigInt(result[2])}`,
-      `cycle start time:  ${BigInt(result[3])}`,
-      `cycle duration:  ${BigInt(result[4])}`,
-      `maximum slots:  ${BigInt(result[5])}`,
-      ` has maximum slots:  ${BigInt(result[6])}`,
-      `cycle stake amount:  ${BigInt(result[7])}`,
-      `total stakes:  ${BigInt(result[8])}`,
-      `stake claimed:  ${BigInt(result[9])}`,
-      `cycle status:  ${BigInt(result[10])}`,
-      `stakes claimed before maturity:  ${BigInt(result[11])}`,
-      "cycle info"
-    );
-  });
+  //   console.log(
+  //     `cycle id: ${BigInt(result[0])}`,
+  //     `grouop id:  ${BigInt(result[1])}`,
+  //     `number of depositors:  ${BigInt(result[2])}`,
+  //     `cycle start time:  ${BigInt(result[3])}`,
+  //     `cycle duration:  ${BigInt(result[4])}`,
+  //     `maximum slots:  ${BigInt(result[5])}`,
+  //     ` has maximum slots:  ${BigInt(result[6])}`,
+  //     `cycle stake amount:  ${BigInt(result[7])}`,
+  //     `total stakes:  ${BigInt(result[8])}`,
+  //     `stake claimed:  ${BigInt(result[9])}`,
+  //     `cycle status:  ${BigInt(result[10])}`,
+  //     `stakes claimed before maturity:  ${BigInt(result[11])}`,
+  //     "cycle info"
+  //   );
+  // });
+})
 
-  it("should withdraw from ongoin cycle", async () => {
-    await xendGroupsContract.activateCycle("1");
+//   it("should withdraw from ongoin cycle", async () => {
+//     await xendGroupsContract.activateCycle("1");
 
-    //const pricePerFullShare = await venusAdapter.GetPricePerFullShare();
-    // const waitTime = (seconds) =>
-    //   new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+//     //const pricePerFullShare = await venusAdapter.GetPricePerFullShare();
+//     // const waitTime = (seconds) =>
+//     //   new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 
-    // await waitTime(20);
+//     // await waitTime(20);
 
-   // console.log(waitTime, "waiting time");
+//    // console.log(waitTime, "waiting time");
 
-    let balanceBeforeWithdrawal = await daiContract.methods
-    .balanceOf(account1)
-    .call();
+//     let balanceBeforeWithdrawal = await daiContract.methods
+//     .balanceOf(account1)
+//     .call();
 
-  console.log(
-    `Recipient: ${account1} DAI Balance before withdrawal: ${balanceBeforeWithdrawal}`
-  );
+//   console.log(
+//     `Recipient: ${account1} DAI Balance before withdrawal: ${balanceBeforeWithdrawal}`
+//   );
 
 
-    let result = await xendGroupsContract.withdrawFromCycleWhileItIsOngoing("1");
+//     let result = await xendGroupsContract.withdrawFromCycleWhileItIsOngoing("1");
 
-    let balanceAfterWithdrawal = await daiContract.methods
-    .balanceOf(account1)
-    .call();
+//     let balanceAfterWithdrawal = await daiContract.methods
+//     .balanceOf(account1)
+//     .call();
 
-  console.log(
-    `Recipient: ${account1} DAI Balance after withdrawal: ${balanceAfterWithdrawal}`
-  );
-
-    assert(balanceAfterWithdrawal > balanceBeforeWithdrawal)
-
-    assert(result.receipt.status == true)
-  })
-
-  it("should start a cycle and the first member should withdraw from cycle", async () => {
-
+<<<<<<< HEAD
     let duration = "5";
     let startTimeStamp = "2";
     let groupId = "1";
@@ -358,89 +394,118 @@ contract("XendFinanceGroup_Yearn_v1", () => {
     );
     assert(cycleResult.receipt.status == true);
     //console.log(cycleResult.receipt.status, "cycle result");
+=======
+//   console.log(
+//     `Recipient: ${account1} DAI Balance after withdrawal: ${balanceAfterWithdrawal}`
+//   );
+>>>>>>> d0e70931a1d942a4688dd80f2e4b3eb2c325930d
 
-    /** joining cycle event */
-    let approvedAmount = BigInt(100000000000000000000);
+//     assert(balanceAfterWithdrawal > balanceBeforeWithdrawal)
 
-    await sendDai(approvedAmount, account1);
+//     assert(result.receipt.status == true)
+//   })
 
-    await sendDai(approvedAmount, account2);
+//   it("should start a cycle and the first member should withdraw from cycle", async () => {
 
-    await approveDai(xendGroupsContract.address, account1, approvedAmount);
+//     let duration = "5";
+//     let startTimeStamp = "2";
+//     let groupId = "1";
+//     let maximumSlots = "2";
+//     let hasMaximumSlots = false;
+//     let cycleStakeAmount = BigInt(100000000000000000000);
+//     let cycleResult = await xendGroupsContract.createCycle(
+//       groupId,
+//       startTimeStamp,
+//       duration,
+//       maximumSlots,
+//       hasMaximumSlots,
+//       cycleStakeAmount
+//     );
+//     assert(cycleResult.receipt.status == true);
+//     //console.log(cycleResult.receipt.status, "cycle result");
 
-    await approveDai(xendGroupsContract.address, account2, approvedAmount);
+//     /** joining cycle event */
+//     let approvedAmount = BigInt(100000000000000000000);
 
-    //await xendGroupsContract.setAdapterAddress();
+//     await sendDai(approvedAmount, account1);
 
-    await xendGroupsContract.joinCycle("2", "1", { from: account1 });
+//     await sendDai(approvedAmount, account2);
 
-    await xendGroupsContract.joinCycle("2", "1", { from: account2 });
+//     await approveDai(xendGroupsContract.address, account1, approvedAmount);
 
+//     await approveDai(xendGroupsContract.address, account2, approvedAmount);
 
-  await xendGroupsContract.activateCycle("2");
+//     //await xendGroupsContract.setAdapterAddress();
 
-    //const pricePerFullShare = await venusAdapter.GetPricePerFullShare();
-    const waitTime = (seconds) =>
-      new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+//     await xendGroupsContract.joinCycle("2", "1", { from: account1 });
 
-    await waitTime(20);
-
-    console.log(waitTime, "waiting time");
-
-    let balanceBeforeWithdrawal = await daiContract.methods
-    .balanceOf(account1)
-    .call();
-
-  console.log(
-    `Recipient: ${account1} DAI Balance before withdrawal: ${balanceBeforeWithdrawal}`
-  );
+//     await xendGroupsContract.joinCycle("2", "1", { from: account2 });
 
 
-    await xendGroupsContract.withdrawFromCycle("2");
+//   await xendGroupsContract.activateCycle("2");
 
-    let cycleInfoResult = await cycleContract.getCycleInfoById("2");
+//     //const pricePerFullShare = await venusAdapter.GetPricePerFullShare();
+//     const waitTime = (seconds) =>
+//       new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 
-    // let cycleMemberIndex = await cycleContract.getCycleMemberIndex(BigInt(cycleInfoResult[0]), account1);
+//     await waitTime(20);
 
-    let balanceAfterWithdrawal = await daiContract.methods
-    .balanceOf(account1)
-    .call();
+//     console.log(waitTime, "waiting time");
 
-  console.log(
-    `Recipient: ${account1} DAI Balance after withdrawal: ${balanceAfterWithdrawal}`
-  );
+//     let balanceBeforeWithdrawal = await daiContract.methods
+//     .balanceOf(account1)
+//     .call();
 
-assert(balanceAfterWithdrawal > balanceBeforeWithdrawal)
+//   console.log(
+//     `Recipient: ${account1} DAI Balance before withdrawal: ${balanceBeforeWithdrawal}`
+//   );
+
+
+//     await xendGroupsContract.withdrawFromCycle("2");
+
+//     let cycleInfoResult = await cycleContract.getCycleInfoById("2");
+
+//     // let cycleMemberIndex = await cycleContract.getCycleMemberIndex(BigInt(cycleInfoResult[0]), account1);
+
+//     let balanceAfterWithdrawal = await daiContract.methods
+//     .balanceOf(account1)
+//     .call();
+
+//   console.log(
+//     `Recipient: ${account1} DAI Balance after withdrawal: ${balanceAfterWithdrawal}`
+//   );
+
+// assert(balanceAfterWithdrawal > balanceBeforeWithdrawal)
     
 
-    console.log(
-      `cycle id: ${BigInt(cycleInfoResult[0])}`,
-      `grouop id:  ${BigInt(cycleInfoResult[1])}`,
-      `number of depositors:  ${BigInt(cycleInfoResult[2])}`,
-      `cycle start time:  ${BigInt(cycleInfoResult[3])}`,
-      `cycle duration:  ${BigInt(cycleInfoResult[4])}`,
-      `maximum slots:  ${BigInt(cycleInfoResult[5])}`,
-      ` has maximum slots:  ${BigInt(cycleInfoResult[6])}`,
-      `cycle stake amount:  ${BigInt(cycleInfoResult[7])}`,
-      `total stakes:  ${BigInt(cycleInfoResult[8])}`,
-      `stake claimed:  ${BigInt(cycleInfoResult[9])}`,
-      `cycle status:  ${BigInt(cycleInfoResult[10])}`,
-      `stakes claimed before maturity:  ${BigInt(cycleInfoResult[11])}`,
-      "cycle info"
-    );
+//     console.log(
+//       `cycle id: ${BigInt(cycleInfoResult[0])}`,
+//       `grouop id:  ${BigInt(cycleInfoResult[1])}`,
+//       `number of depositors:  ${BigInt(cycleInfoResult[2])}`,
+//       `cycle start time:  ${BigInt(cycleInfoResult[3])}`,
+//       `cycle duration:  ${BigInt(cycleInfoResult[4])}`,
+//       `maximum slots:  ${BigInt(cycleInfoResult[5])}`,
+//       ` has maximum slots:  ${BigInt(cycleInfoResult[6])}`,
+//       `cycle stake amount:  ${BigInt(cycleInfoResult[7])}`,
+//       `total stakes:  ${BigInt(cycleInfoResult[8])}`,
+//       `stake claimed:  ${BigInt(cycleInfoResult[9])}`,
+//       `cycle status:  ${BigInt(cycleInfoResult[10])}`,
+//       `stakes claimed before maturity:  ${BigInt(cycleInfoResult[11])}`,
+//       "cycle info"
+//     );
 
-    let cycleMember = await cycleContract.getCycleMember("0");
+//     let cycleMember = await cycleContract.getCycleMember("0");
 
-    console.log(
-      `cycle id: ${BigInt(cycleMember[0])}`,
-      `grouop id:  ${BigInt(cycleMember[1])}`,
-      `depositor address:  ${BigInt(cycleMember[2])}`,
-      `ctotalLiquidityAsPenalty::  ${BigInt(cycleMember[3])}`,
-      `number of cycle stakes:  ${BigInt(cycleMember[4])}`,
-      `stakes claimed:  ${BigInt(cycleMember[5])}`,
-      ` cycle status:  ${BigInt(cycleMember[6])}`,
-      "cycle info"
-    );
-  });
+//     console.log(
+//       `cycle id: ${BigInt(cycleMember[0])}`,
+//       `grouop id:  ${BigInt(cycleMember[1])}`,
+//       `depositor address:  ${BigInt(cycleMember[2])}`,
+//       `ctotalLiquidityAsPenalty::  ${BigInt(cycleMember[3])}`,
+//       `number of cycle stakes:  ${BigInt(cycleMember[4])}`,
+//       `stakes claimed:  ${BigInt(cycleMember[5])}`,
+//       ` cycle status:  ${BigInt(cycleMember[6])}`,
+//       "cycle info"
+//     );
+//   });
 
 });

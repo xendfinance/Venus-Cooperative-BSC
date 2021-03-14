@@ -116,6 +116,44 @@ contract XendFinanceGroupContainer_Yearn_V1 is IGroupSchema {
 
 
 contract XendFinanceGroupHelpers is XendFinanceGroupContainer_Yearn_V1 {
+
+     function getCycleByGroup(uint256 _groupId, uint256 indexerRecordLocation)
+            external
+            view
+            returns (
+                uint256 id,
+                uint256 groupId,
+                uint256 numberOfDepositors,
+                uint256 cycleStartTimeStamp,
+                uint256 cycleDuration,
+                uint256 maximumSlots,
+                bool hasMaximumSlots,
+                uint256 cycleStakeAmount,
+                uint256 totalStakes,
+                uint256 stakesClaimed,
+                CycleStatus cycleStatus,
+                uint256 stakesClaimedBeforeMaturity
+            )
+        {
+            uint256 index = _getIndexLocation(_groupId, indexerRecordLocation);
+            return cycleStorage.getCycleInfoByIndex(index);
+        }
+        
+        function _getIndexLocation(uint256 _groupId, uint256 indexerRecordLocation)
+            internal
+            view
+            returns (uint256)
+        {
+            (bool exists, uint256 index) = cycleStorage.getRecordIndexForGroupCycle(
+                _groupId,
+                indexerRecordLocation
+            );
+            require(exists == true, "Index location record does not exist");
+            return index;
+        }
+        
+        
+
     function _updateGroup(Group memory group) internal {
         uint256 index = _getGroupIndex(group.id);
         groupStorage.updateGroup(
@@ -788,12 +826,12 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
         returns (uint256)
     {
         uint256 balanceBeforeWithdraw =
-            lendingService.UserDAIBalance(address(this));
+            lendingService.UserBUSDBalance(address(this));
 
         lendingService.WithdrawBySharesOnly(derivativeBalance);
 
         uint256 balanceAfterWithdraw =
-            lendingService.UserDAIBalance(address(this));
+            lendingService.UserBUSDBalance(address(this));
 
         uint256 amountOfUnderlyingAssetWithdrawn =
             balanceAfterWithdraw.sub(balanceBeforeWithdraw);
