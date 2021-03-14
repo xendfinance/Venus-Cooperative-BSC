@@ -289,11 +289,11 @@ contract("XendFinanceGroup_Yearn_v1", () => {
 
     await approveDai(xendGroupsContract.address, account2, approvedAmount);
 
-    //await xendGroupsContract.setAdapterAddress();
+    await xendGroupsContract.setAdapterAddress();
 
     await xendGroupsContract.joinCycle("1", "1", { from: account1 });
 
-    await xendGroupsContract.joinCycle("1", "1", { from: account2 });
+    // //await xendGroupsContract.joinCycle("1", "1", { from: account2 });
 
     let groupInfo = await xendGroupsContract.getCycleByGroup("1", "0");
 
@@ -313,7 +313,7 @@ contract("XendFinanceGroup_Yearn_v1", () => {
       "cycle info"
     );
 
-    let groupInfo2 = await xendGroupsContract.getCycleByGroup("2", "1");
+    let groupInfo2 = await xendGroupsContract.getCycleByGroup("2", "0");
 
     console.log(
       `cycle id: ${BigInt(groupInfo2[0])}`,
@@ -333,22 +333,23 @@ contract("XendFinanceGroup_Yearn_v1", () => {
 
     let result = await cycleContract.getCycleInfoById("1");
 
-    console.log(
-      `cycle id: ${BigInt(result[0])}`,
-      `grouop id:  ${BigInt(result[1])}`,
-      `number of depositors:  ${BigInt(result[2])}`,
-      `cycle start time:  ${BigInt(result[3])}`,
-      `cycle duration:  ${BigInt(result[4])}`,
-      `maximum slots:  ${BigInt(result[5])}`,
-      ` has maximum slots:  ${BigInt(result[6])}`,
-      `cycle stake amount:  ${BigInt(result[7])}`,
-      `total stakes:  ${BigInt(result[8])}`,
-      `stake claimed:  ${BigInt(result[9])}`,
-      `cycle status:  ${BigInt(result[10])}`,
-      `stakes claimed before maturity:  ${BigInt(result[11])}`,
-      "cycle info"
-    );
-  });
+  //   console.log(
+  //     `cycle id: ${BigInt(result[0])}`,
+  //     `grouop id:  ${BigInt(result[1])}`,
+  //     `number of depositors:  ${BigInt(result[2])}`,
+  //     `cycle start time:  ${BigInt(result[3])}`,
+  //     `cycle duration:  ${BigInt(result[4])}`,
+  //     `maximum slots:  ${BigInt(result[5])}`,
+  //     ` has maximum slots:  ${BigInt(result[6])}`,
+  //     `cycle stake amount:  ${BigInt(result[7])}`,
+  //     `total stakes:  ${BigInt(result[8])}`,
+  //     `stake claimed:  ${BigInt(result[9])}`,
+  //     `cycle status:  ${BigInt(result[10])}`,
+  //     `stakes claimed before maturity:  ${BigInt(result[11])}`,
+  //     "cycle info"
+  //   );
+  // });
+})
 
 //   it("should withdraw from ongoin cycle", async () => {
 //     await xendGroupsContract.activateCycle("1");
