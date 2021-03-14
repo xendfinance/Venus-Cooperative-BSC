@@ -15,7 +15,8 @@ interface IVenusLendingService {
 
     function UserShares(address user) external view returns (uint256);
 
-    function UserDAIBalance(address user) external view returns (uint256);
+    function UserBUSDBalance(address user) external view returns (uint256);
 
     function GetPricePerFullShare() external view returns (uint256);
+
 }

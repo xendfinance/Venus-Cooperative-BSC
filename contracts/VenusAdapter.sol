@@ -25,9 +25,9 @@ contract VenusAdapter is OwnableService, ReentrancyGuard{
      }
     
 
-    mapping(address => uint256) userDAIdeposits;
+    mapping(address => uint256) userBUSDdeposits;
 
-    function GetPricePerFullShare() external view returns (uint256){
+    function GetPricePerFullShare() public view returns (uint256){
 
         uint256 cash = _vBUSD.getCash();
 
@@ -57,12 +57,12 @@ contract VenusAdapter is OwnableService, ReentrancyGuard{
  
     
     
-    function GetDAIBalance(address account) external view returns (uint256){
+    function GetBUSDBalance(address account) external view returns (uint256){
         return _BUSD.balanceOf(account);
     }
     
 
-    function GetVDaiBalance(address account) public view returns (uint256) {
+    function GetVBUSDBalance(address account) public view returns (uint256) {
         return _vBUSD.balanceOf(account);
     }
 
@@ -82,7 +82,7 @@ contract VenusAdapter is OwnableService, ReentrancyGuard{
         //  See example with Node.js below
         //  await daiContract.methods.approve("recipient(in our case, this smart contract address)",1000000).send({from: "wallet address with DAI"});
 
-        //  Transfer DAI from the account address to this smart contract address
+        //  Transfer BUSD from the account address to this smart contract address
         _BUSD.safeTransferFrom(account, address(this), amount);
 
         //  This gives the yDAI contract approval to invest our DAI
@@ -94,7 +94,7 @@ contract VenusAdapter is OwnableService, ReentrancyGuard{
 
     function GetGrossRevenue(address account) public view returns (uint256) {
         //  Get the price per full share
-        uint256 price = _vBUSD.exchangeRateCurrent();
+        uint256 price = GetPricePerFullShare();
 
         //  Get the balance of yDai in this users address
         uint256 balanceShares = _vBUSD.balanceOf(account);
@@ -105,9 +105,13 @@ contract VenusAdapter is OwnableService, ReentrancyGuard{
     function GetNetRevenue(address account) public view returns (uint256) {
         uint256 grossBalance = GetGrossRevenue(account);
 
-        uint256 userDaiDepositsBalance = userDAIdeposits[account].mul(1e18); // multiply dai deposit by 1 * 10 ^ 18 to get value in 10 ^36
+        uint256 userBUSDdepositsBalance = userBUSDdeposits[account];
 
-        return grossBalance.sub(userDaiDepositsBalance);
+        if(grossBalance > userBUSDdepositsBalance){
+        
+            return grossBalance.sub(userBUSDdepositsBalance);
+        }
+        return 0;
     }
 
     function Withdraw(uint256 amount, address owner)
@@ -126,11 +130,11 @@ contract VenusAdapter is OwnableService, ReentrancyGuard{
         _withdrawBySharesAndAmount(owner,balanceShares,amount);
 
         //  If we have some DAi left after transferring a specified amount to a recipient, we can re-invest it in yearn finance
-        uint256 balanceDai = _BUSD.balanceOf(address(this));
+        uint256 balanceBUSD = _BUSD.balanceOf(address(this));
 
-        if (balanceDai > 0) {
+        if (balanceBUSD > 0) {
             //  This gives the _vBUSD contract approval to invest our DAi
-            _save(balanceDai, owner);
+            _save(balanceBUSD, owner);
         }
     }
 
@@ -152,11 +156,11 @@ contract VenusAdapter is OwnableService, ReentrancyGuard{
         _withdrawBySharesAndAmount(owner,balanceShares,amount);
 
         //  If we have some DAI left after transferring a specified amount to a recipient, we can re-invest it in yearn finance
-        uint256 balanceDai = _BUSD.balanceOf(address(this));
+        uint256 balanceBUSD = _BUSD.balanceOf(address(this));
 
-        if (balanceDai > 0) {
+        if (balanceBUSD > 0) {
             //  This gives the yDAI contract approval to invest our DAI
-            _save(balanceDai, owner);
+            _save(balanceBUSD, owner);
         }
     }
 
@@ -193,8 +197,8 @@ contract VenusAdapter is OwnableService, ReentrancyGuard{
         //  transfer the _vBUSD shares to the user's address
         _vBUSD.safeTransfer(account, shares);
 
-        //  add deposited dai to userDaiDeposits mapping
-        userDAIdeposits[account] = userDAIdeposits[account].add(amount);
+        //  add deposited dai to userBUSDdeposits mapping
+        userBUSDdeposits[account] = userBUSDdeposits[account].add(amount);
     }
     
     function _withdrawBySharesOnly(address owner, uint256 balanceShares) internal {
@@ -202,18 +206,18 @@ contract VenusAdapter is OwnableService, ReentrancyGuard{
         //  We now call the withdraw function to withdraw the total DAi we have. This withdrawal is sent to this smart contract
         _vBUSD.redeem(balanceShares);
 
-        uint256 contractDaiBalance = _BUSD.balanceOf(address(this));
+        uint256 contractBUSDBalance = _BUSD.balanceOf(address(this));
 
         //  Now all the DAI we have are in the smart contract wallet, we can now transfer the total amount to the recipient
-        _BUSD.safeTransfer(owner, contractDaiBalance);
+        _BUSD.safeTransfer(owner, contractBUSDBalance);
 
-        //   remove withdrawn dai of this owner from userDaiDeposits mapping
-        if (userDAIdeposits[owner] >= contractDaiBalance) {
-            userDAIdeposits[owner] = userDAIdeposits[owner].sub(
-                contractDaiBalance
+        //   remove withdrawn dai of this owner from userBUSDdeposits mapping
+        if (userBUSDdeposits[owner] >= contractBUSDBalance) {
+            userBUSDdeposits[owner] = userBUSDdeposits[owner].sub(
+                contractBUSDBalance
             );
         } else {
-            userDAIdeposits[owner] = 0;
+            userBUSDdeposits[owner] = 0;
         }
     }
     
@@ -226,13 +230,13 @@ contract VenusAdapter is OwnableService, ReentrancyGuard{
         _BUSD.safeTransfer(owner, amount);
         
 
-        //   remove withdrawn DAi of this owner from userDaiDeposits mapping
-        if (userDAIdeposits[owner] >= amount) {
-            userDAIdeposits[owner] = userDAIdeposits[owner].sub(
+        //   remove withdrawn DAi of this owner from userBUSDdeposits mapping
+        if (userBUSDdeposits[owner] >= amount) {
+            userBUSDdeposits[owner] = userBUSDdeposits[owner].sub(
                 amount
             );
         } else {
-            userDAIdeposits[owner] = 0;
+            userBUSDdeposits[owner] = 0;
         }
     }
 }

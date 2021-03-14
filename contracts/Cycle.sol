@@ -384,6 +384,16 @@ contract Cycles is IGroupSchema, StorageOwners {
         return CycleIndexer[cycleId].index;
     }
 
+      function getRecordIndexForGroupCycle(
+        uint256 groupId,
+        uint256 recordIndexLocation
+    ) external view returns (bool, uint256) {
+
+            RecordIndex memory recordIndex
+         = GroupCycleIndexer[groupId][recordIndexLocation];
+        return (recordIndex.exists, recordIndex.index);
+    }
+
     function getRecordIndexForCycleMembersIndexerByDepositor(
         address depositorAddress,
         uint256 recordIndexLocation
