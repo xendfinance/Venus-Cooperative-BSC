@@ -377,28 +377,9 @@ contract("XendFinanceGroup_Yearn_v1", () => {
 //     .balanceOf(account1)
 //     .call();
 
-<<<<<<< HEAD
-    let duration = "5";
-    let startTimeStamp = "2";
-    let groupId = "1";
-    let maximumSlots = "2";
-    let hasMaximumSlots = false;
-    let cycleStakeAmount = BigInt(100000000000000000000);
-    let cycleResult = await xendGroupsContract.createCycle(
-      groupId,
-      startTimeStamp,
-      duration,
-      maximumSlots,
-      hasMaximumSlots,
-      cycleStakeAmount.toString()
-    );
-    assert(cycleResult.receipt.status == true);
-    //console.log(cycleResult.receipt.status, "cycle result");
-=======
 //   console.log(
 //     `Recipient: ${account1} DAI Balance after withdrawal: ${balanceAfterWithdrawal}`
 //   );
->>>>>>> d0e70931a1d942a4688dd80f2e4b3eb2c325930d
 
 //     assert(balanceAfterWithdrawal > balanceBeforeWithdrawal)
 
