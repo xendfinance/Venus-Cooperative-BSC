@@ -10,7 +10,7 @@ contract SavingsConfig is ISavingsConfigSchema, Ownable {
     mapping(string => address) public RuleModifier;
 
     function getRuleSet(string calldata ruleKey)
-        external
+        external view
         returns (
             uint256,
             uint256,
@@ -36,7 +36,7 @@ contract SavingsConfig is ISavingsConfigSchema, Ownable {
     }
 
     function getRuleManager(string calldata ruleKey)
-        external
+        external view
         returns (address)
     {
         RuleSet memory ruleSet = RuleMapping[ruleKey];
