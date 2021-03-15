@@ -7,8 +7,8 @@ import './ISavingsConfigSchema.sol';
 
 interface  ISavingsConfig is ISavingsConfigSchema {
    
-    function getRuleSet(string calldata ruleKey) external returns (uint ,uint , uint ,  bool ,RuleDefinition );
-    function getRuleManager(string calldata ruleKey) external returns (address);
+    function getRuleSet(string calldata ruleKey) external view returns (uint ,uint , uint ,  bool ,RuleDefinition );
+    function getRuleManager(string calldata ruleKey) external view returns (address);
     function changeRuleCreator(string calldata ruleKey, address newRuleManager) external;
     function createRule(string calldata ruleKey, uint minimum, uint maximum, uint exact, RuleDefinition ruleDefinition) external;
     function modifyRule(string calldata ruleKey, uint minimum, uint maximum, uint exact,  RuleDefinition  ruleDefinition ) external;
