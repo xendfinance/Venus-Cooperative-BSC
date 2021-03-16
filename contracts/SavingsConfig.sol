@@ -89,7 +89,6 @@ contract SavingsConfig is ISavingsConfigSchema, Ownable {
         ruleSet.minimum = minimum;
         ruleSet.maximum = maximum;
         ruleSet.exact = exact;
-        ruleSet.exists = false;
         ruleSet.ruleDefinition = ruleDefinition;
         _saveRule(ruleKey, ruleSet);
     }
