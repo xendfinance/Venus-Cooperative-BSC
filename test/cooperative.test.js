@@ -264,7 +264,7 @@ contract("XendFinanceGroup_Yearn_v1", () => {
       duration,
       maximumSlots,
       hasMaximumSlots,
-      cycleStakeAmount
+      cycleStakeAmount.toString()
     );
 
     await xendGroupsContract.createCycle(
