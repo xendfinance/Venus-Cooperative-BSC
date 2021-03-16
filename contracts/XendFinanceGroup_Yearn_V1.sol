@@ -1236,9 +1236,10 @@ contract XendFinanceGroup_Yearn_V1 is
         isDeprecated = true;
         groupStorage.reAssignStorageOracle(newServiceAddress);
         cycleStorage.reAssignStorageOracle(newServiceAddress);
-        uint256 derivativeTokenBalance =
-            derivativeToken.balanceOf(address(this));
-        derivativeToken.safeTransfer(newServiceAddress, derivativeTokenBalance);
+        
+        derivativeToken.safeTransfer(newServiceAddress, derivativeToken.balanceOf(address(this)));
+        
+       _busd.safeTransfer(newServiceAddress, _busd.balanceOf(address(this)));
     }
 
     function _rewardUserWithTokens(
@@ -1509,70 +1510,7 @@ contract XendFinanceGroup_Yearn_V1 is
         );
     }
 
-    // function getCycleByIndex(uint256 index)
-    //     external
-    //     view
-    //     onlyNonDeprecatedCalls
-    //     returns (
-    //         uint256 id,
-    //         uint256 groupId,
-    //         uint256 numberOfDepositors,
-    //         uint256 cycleStartTimeStamp,
-    //         uint256 cycleDuration,
-    //         uint256 maximumSlots,
-    //         bool hasMaximumSlots,
-    //         uint256 cycleStakeAmount,
-    //         uint256 totalStakes,
-    //         uint256 stakesClaimed,
-    //         CycleStatus cycleStatus,
-    //         uint256 stakesClaimedBeforeMaturity
-    //     )
-    // {
-    //     Cycle memory cycle = _getCycleByIndex(index);
-
-    //     return (
-    //         cycle.id,
-    //         cycle.groupId,
-    //         cycle.numberOfDepositors,
-    //         cycle.cycleStartTimeStamp,
-    //         cycle.cycleDuration,
-    //         cycle.maximumSlots,
-    //         cycle.hasMaximumSlots,
-    //         cycle.cycleStakeAmount,
-    //         cycle.totalStakes,
-    //         cycle.stakesClaimed,
-    //         cycle.cycleStatus,
-    //         cycle.stakesClaimedBeforeMaturity
-    //     );
-    // }
-
-    function getCycleMember(uint256 index)
-        external
-        view
-        onlyNonDeprecatedCalls
-        returns (
-            uint256 cycleId,
-            uint256 groupId,
-            uint256 totalLiquidityAsPenalty,
-            uint256 numberOfCycleStakes,
-            uint256 stakesClaimed,
-            bool exist,
-            address payable _address,
-            bool hasWithdrawn
-        )
-    {
-        CycleMember memory cycleMember = _getCycleMember(index);
-        return (
-            cycleMember.cycleId,
-            cycleMember.groupId,
-            cycleMember.totalLiquidityAsPenalty,
-            cycleMember.numberOfCycleStakes,
-            cycleMember.stakesClaimed,
-            cycleMember.exist,
-            cycleMember._address,
-            cycleMember.hasWithdrawn
-        );
-    }
+    
 
     function activateCycle(uint256 cycleId)
         external
@@ -1642,27 +1580,7 @@ contract XendFinanceGroup_Yearn_V1 is
         );
     }
 
-    // function getGroupByIndex(uint256 index)
-    //     external
-    //     view
-    //     onlyNonDeprecatedCalls
-    //     returns (
-    //         bool exists,
-    //         uint256 id,
-    //         string memory name,
-    //         string memory symbol,
-    //         address payable creatorAddress
-    //     )
-    // {
-    //     Group memory group = _getGroupByIndex(index);
-    //     return (
-    //         group.exists,
-    //         group.id,
-    //         group.name,
-    //         group.symbol,
-    //         group.creatorAddress
-    //     );
-    // }
+   
 
     function getGroupById(uint256 _id)
         external
@@ -1728,22 +1646,19 @@ contract XendFinanceGroup_Yearn_V1 is
         );
     }
 
-    function _getAllowanceForBusd() internal view returns (uint256) {
-        address recipient = address(this);
-        uint256 amountDepositedByUser = _busd.allowance(msg.sender, recipient);
-        require(
-            amountDepositedByUser > 0,
-            "Approve an amount to cover for stake purchase"
-        );
-
-        return amountDepositedByUser;
-    }
+   
 
     function joinCycle(uint256 cycleId, uint256 numberOfStakes)
         external
         onlyNonDeprecatedCalls
     {
-        uint256 allowance = _getAllowanceForBusd();
+        address recipient = address(this);
+        uint256 allowance = _busd.allowance(msg.sender, recipient);
+        require(
+            allowance > 0,
+            "Approve an amount to cover for stake purchase"
+        );
+        
         address payable depositorAddress = msg.sender;
         _joinCycle(cycleId, numberOfStakes, allowance, depositorAddress);
     }
