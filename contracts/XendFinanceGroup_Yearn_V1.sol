@@ -672,8 +672,7 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
         Cycle memory cycle,
         bool didCycleMemberExistBeforeNow
     ) internal view {
-        bool hasMaximumSlots = cycle.hasMaximumSlots;
-        if (hasMaximumSlots && !didCycleMemberExistBeforeNow) {
+        if (cycle.hasMaximumSlots && !didCycleMemberExistBeforeNow) {
             require(
                 cycle.numberOfDepositors < cycle.maximumSlots,
                 "Maximum slot for depositors has been reached"
@@ -722,8 +721,6 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
         if (doesCycleMemberExist) {
             cycleMember = _getCycleMember(depositorAddress, cycleId);
         }
-
-        uint256 underlyingAmount = amountToDeductFromClient;
        
         cycleMember = _saveMemberDeposit(
             doesCycleMemberExist,
@@ -738,7 +735,7 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
                 member,
                 groupMember,
                 cycleMember,
-                underlyingAmount
+                amountToDeductFromClient
             );
 
         return result;
@@ -775,8 +772,7 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
         internal
         returns (Cycle memory, CycleFinancial memory)
     {
-        bool isCycleReadyToBeEnded = _isCycleReadyToBeEnded(cycleId);
-        require(isCycleReadyToBeEnded, "Cycle is still ongoing");
+        require(_isCycleReadyToBeEnded(cycleId), "Cycle is still ongoing");
 
         Cycle memory cycle = _getCycleById(cycleId);
         CycleFinancial memory cycleFinancial =
@@ -814,11 +810,10 @@ contract XendFinanceCycleHelpers is XendFinanceGroupHelpers {
 
         if (cycle.cycleStatus != CycleStatus.ONGOING) return false;
 
-        uint256 currentTimeStamp = now;
         uint256 cycleEndTimeStamp =
             cycle.cycleStartTimeStamp + cycle.cycleDuration;
 
-        return currentTimeStamp >= cycleEndTimeStamp;
+        return now >= cycleEndTimeStamp;
     }
 
     function _redeemLending(uint256 derivativeBalance)
@@ -1100,13 +1095,13 @@ contract XendFinanceGroup_Yearn_V1 is
     {
         require(
             cycleStorage.doesCycleMemberExist(cycleId, memberAddress),
-            "You are not a member of this cycle"
+            "Not a member of this cycle"
         );
 
         uint256 index = _getCycleMemberIndex(cycleId, memberAddress);
         CycleMember memory cycleMember = _getCycleMember(index);
 
-        require(!cycleMember.hasWithdrawn, "Funds have already been withdrawn");
+        require(!cycleMember.hasWithdrawn, "Already withdrawn");
 
         return cycleMember;
     }
@@ -1119,7 +1114,16 @@ contract XendFinanceGroup_Yearn_V1 is
         Cycle memory cycle;
         CycleFinancial memory cycleFinancial;
 
-        (cycle, cycleFinancial) = _endCycle(cycleId);
+     
+        //(cycle, cycleFinancial) = _endCycle(cycleId);
+        if(_isCycleReadyToBeEnded(cycleId))
+        {
+            (cycle, cycleFinancial) = _endCycle(cycleId);
+        }
+        else{
+            cycle = _getCycleById(cycleId);
+            cycleFinancial = _getCycleFinancialByCycleId(cycleId);
+        }
 
         CycleMember memory cycleMember =
             _getCycleMemberInfo(cycleId, memberAddress);
@@ -1274,11 +1278,11 @@ contract XendFinanceGroup_Yearn_V1 is
             RuleDefinition ruleDefinition
         ) = savingsConfig.getRuleSet(PERCENTAGE_AS_PENALTY);
 
-        require(applies, "unsupported rule defintion for rule set");
+        require(applies, "Unsupported rule defintion");
 
         require(
             ruleDefinition == RuleDefinition.VALUE,
-            "unsupported rule defintion for penalty percentage rule set"
+            "Unsupported rule defintion for percentage"
         );
 
         require(
@@ -1315,11 +1319,11 @@ contract XendFinanceGroup_Yearn_V1 is
             RuleDefinition ruleDefinitionDivisor
         ) = savingsConfig.getRuleSet(XEND_FINANCE_COMMISION_DIVISOR);
 
-        require(appliesDivisor, "unsupported rule defintion for rule set");
+        require(appliesDivisor, "unsupported rule defintion");
 
         require(
             ruleDefinitionDivisor == RuleDefinition.VALUE,
-            "unsupported rule defintion for penalty percentage rule set"
+            "unsupported rule defintion for percentage"
         );
         return exactDivisor;
     }
@@ -1333,11 +1337,11 @@ contract XendFinanceGroup_Yearn_V1 is
             RuleDefinition ruleDefinitionDividend
         ) = savingsConfig.getRuleSet(XEND_FINANCE_COMMISION_DIVIDEND);
 
-        require(appliesDividend, "unsupported rule defintion for rule set");
+        require(appliesDividend, "unsupported rule defintion");
 
         require(
             ruleDefinitionDividend == RuleDefinition.VALUE,
-            "unsupported rule defintion for penalty percentage rule set"
+            "unsupported rule defintion for penalty percentage"
         );
         return exactDividend;
     }
@@ -1359,7 +1363,7 @@ contract XendFinanceGroup_Yearn_V1 is
 
         require(
             ruleDefinition == RuleDefinition.VALUE,
-            "unsupported rule defintion for payout  percentage rule set"
+            "unsupported rule defintion for payout  percentage"
         );
 
         //ensures we send what the user's investment is currently worth when his original deposit did not appreciate in value
@@ -1505,42 +1509,42 @@ contract XendFinanceGroup_Yearn_V1 is
         );
     }
 
-    function getCycleByIndex(uint256 index)
-        external
-        view
-        onlyNonDeprecatedCalls
-        returns (
-            uint256 id,
-            uint256 groupId,
-            uint256 numberOfDepositors,
-            uint256 cycleStartTimeStamp,
-            uint256 cycleDuration,
-            uint256 maximumSlots,
-            bool hasMaximumSlots,
-            uint256 cycleStakeAmount,
-            uint256 totalStakes,
-            uint256 stakesClaimed,
-            CycleStatus cycleStatus,
-            uint256 stakesClaimedBeforeMaturity
-        )
-    {
-        Cycle memory cycle = _getCycleByIndex(index);
+    // function getCycleByIndex(uint256 index)
+    //     external
+    //     view
+    //     onlyNonDeprecatedCalls
+    //     returns (
+    //         uint256 id,
+    //         uint256 groupId,
+    //         uint256 numberOfDepositors,
+    //         uint256 cycleStartTimeStamp,
+    //         uint256 cycleDuration,
+    //         uint256 maximumSlots,
+    //         bool hasMaximumSlots,
+    //         uint256 cycleStakeAmount,
+    //         uint256 totalStakes,
+    //         uint256 stakesClaimed,
+    //         CycleStatus cycleStatus,
+    //         uint256 stakesClaimedBeforeMaturity
+    //     )
+    // {
+    //     Cycle memory cycle = _getCycleByIndex(index);
 
-        return (
-            cycle.id,
-            cycle.groupId,
-            cycle.numberOfDepositors,
-            cycle.cycleStartTimeStamp,
-            cycle.cycleDuration,
-            cycle.maximumSlots,
-            cycle.hasMaximumSlots,
-            cycle.cycleStakeAmount,
-            cycle.totalStakes,
-            cycle.stakesClaimed,
-            cycle.cycleStatus,
-            cycle.stakesClaimedBeforeMaturity
-        );
-    }
+    //     return (
+    //         cycle.id,
+    //         cycle.groupId,
+    //         cycle.numberOfDepositors,
+    //         cycle.cycleStartTimeStamp,
+    //         cycle.cycleDuration,
+    //         cycle.maximumSlots,
+    //         cycle.hasMaximumSlots,
+    //         cycle.cycleStakeAmount,
+    //         cycle.totalStakes,
+    //         cycle.stakesClaimed,
+    //         cycle.cycleStatus,
+    //         cycle.stakesClaimedBeforeMaturity
+    //     );
+    // }
 
     function getCycleMember(uint256 index)
         external
@@ -1638,27 +1642,27 @@ contract XendFinanceGroup_Yearn_V1 is
         );
     }
 
-    function getGroupByIndex(uint256 index)
-        external
-        view
-        onlyNonDeprecatedCalls
-        returns (
-            bool exists,
-            uint256 id,
-            string memory name,
-            string memory symbol,
-            address payable creatorAddress
-        )
-    {
-        Group memory group = _getGroupByIndex(index);
-        return (
-            group.exists,
-            group.id,
-            group.name,
-            group.symbol,
-            group.creatorAddress
-        );
-    }
+    // function getGroupByIndex(uint256 index)
+    //     external
+    //     view
+    //     onlyNonDeprecatedCalls
+    //     returns (
+    //         bool exists,
+    //         uint256 id,
+    //         string memory name,
+    //         string memory symbol,
+    //         address payable creatorAddress
+    //     )
+    // {
+    //     Group memory group = _getGroupByIndex(index);
+    //     return (
+    //         group.exists,
+    //         group.id,
+    //         group.name,
+    //         group.symbol,
+    //         group.creatorAddress
+    //     );
+    // }
 
     function getGroupById(uint256 _id)
         external
@@ -1729,7 +1733,7 @@ contract XendFinanceGroup_Yearn_V1 is
         uint256 amountDepositedByUser = _busd.allowance(msg.sender, recipient);
         require(
             amountDepositedByUser > 0,
-            "Approve an amount to cover for stake purchase [0]"
+            "Approve an amount to cover for stake purchase"
         );
 
         return amountDepositedByUser;
