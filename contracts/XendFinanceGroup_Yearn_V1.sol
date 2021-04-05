@@ -863,6 +863,8 @@ contract XendFinanceGroup_Yearn_V1 is
     using SafeERC20 for IVBUSD;
 
     using Address for address payable;
+    using Address for address;
+
 
     constructor(
         address lendingServiceAddress,
@@ -898,6 +900,12 @@ contract XendFinanceGroup_Yearn_V1 is
 
     function setAdapterAddress() external onlyOwner {
         LendingAdapterAddress = lendingService.GetVenusLendingAdapterAddress();
+    }
+
+    function updateRewardBridgeAddress(address newRewardBridgeAddress) external onlyOwner{
+        require(newRewardBridgeAddress!=address(0x0),"Invalid address");
+        require(newRewardBridgeAddress.isContract(),"Invalid contract address");
+        rewardBridge = IRewardBridge(newRewardBridgeAddress);
     }
 
     function GetTotalTokenRewardDistributed() external view returns (uint256) {
