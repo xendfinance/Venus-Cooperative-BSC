@@ -15,8 +15,7 @@ import "./IERC20.sol";
 // import "./Address.sol";
 import "./IRewardConfig.sol";
 import "./SafeMath.sol";
-import "./IXendToken.sol";
-
+import "./IRewardBridge.sol";
 contract XendFinanceGroupContainer_Yearn_V1 is IGroupSchema {
     struct CycleDepositResult {
         Group group;
@@ -84,7 +83,7 @@ contract XendFinanceGroupContainer_Yearn_V1 is IGroupSchema {
     ITreasury treasury;
     ISavingsConfig savingsConfig;
     IRewardConfig rewardConfig;
-    IXendToken xendToken;
+    IRewardBridge rewardBridge;
     IVBUSD derivativeToken;
 
     address LendingAdapterAddress;
@@ -873,7 +872,7 @@ contract XendFinanceGroup_Yearn_V1 is
         address treasuryAddress,
         address savingsConfigAddress,
         address rewardConfigAddress,
-        address xendTokenAddress,
+        address rewardBridgeAddress,
         address derivativeTokenAddress
     ) public {
         lendingService = IVenusLendingService(lendingServiceAddress);
@@ -883,7 +882,7 @@ contract XendFinanceGroup_Yearn_V1 is
         treasury = ITreasury(treasuryAddress);
         savingsConfig = ISavingsConfig(savingsConfigAddress);
         rewardConfig = IRewardConfig(rewardConfigAddress);
-        xendToken = IXendToken(xendTokenAddress);
+        rewardBridge = IRewardBridge(rewardBridgeAddress);
         derivativeToken = IVBUSD(derivativeTokenAddress);
         TokenAddress = tokenAddress;
         TreasuryAddress = treasuryAddress;
@@ -1254,7 +1253,7 @@ contract XendFinanceGroup_Yearn_V1 is
             );
 
         if (numberOfRewardTokens > 0) {
-            xendToken.mint(cycleMemberAddress, numberOfRewardTokens);
+            rewardBridge.rewardUser(numberOfRewardTokens,cycleMemberAddress);
             groupStorage.setXendTokensReward(
                 cycleMemberAddress,
                 numberOfRewardTokens
