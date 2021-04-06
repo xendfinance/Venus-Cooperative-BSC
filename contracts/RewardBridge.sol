@@ -16,8 +16,8 @@ contract RewardBridge is XendTokenMinters,IRewardBridge {
 
     address RewardTokenAddress;
 
-    constructor() public{
-
+    constructor(address rewardTokenAddress) public{
+        RewardTokenAddress = rewardTokenAddress;
      
     }
 
