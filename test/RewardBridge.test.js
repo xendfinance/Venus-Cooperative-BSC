@@ -78,6 +78,20 @@ contract("RewardBridge", () => {
 
   });
 
+  it("Withdraw should empty the token balance of the Reward Bridge contract", async()=>{
+    let accounts = await web3.eth.getAccounts();
+    let bridgeAddress = rewardBridgeInstance.address
+    let initialBalance = await rewardTokenInstance.balanceOf(bridgeAddress);
+    console.log({initialBalance})
+
+    await rewardBridgeInstance.withdrawTokens();
+
+    let currentTokenBalanceForbridge = await rewardTokenInstance.balanceOf(rewardBridgeInstance.address);
+
+    assert.strictEqual(`${currentTokenBalanceForbridge}`, `${0}`);
+
+  });
+
   it("Update Token Address should update the reward token address", async()=>{
     let newRewardTokenAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56";
     await rewardBridgeInstance.updateTokenAddress(newRewardTokenAddress)
