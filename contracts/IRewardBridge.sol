@@ -10,4 +10,5 @@ interface IRewardBridge  {
     function withdrawTokens(address tokenAddress) external;
 
     function withdrawTokens() external;
+    function getTokenAddress() external view returns (address);
 }

@@ -40,6 +40,10 @@ contract RewardBridge is XendTokenMinters,IRewardBridge {
         RewardTokenAddress = newTokenAddress;
     }
 
+    function getTokenAddress() external view override returns (address){
+        return RewardTokenAddress;
+    }
+
     function withdrawTokens(address tokenAddress) external override onlyOwner{
         uint256 balance = _balance(tokenAddress);
         require(balance>0,"Insufficient token balance");
