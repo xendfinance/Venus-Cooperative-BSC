@@ -991,9 +991,7 @@ contract XendFinanceGroup_Yearn_V1 is
                 underlyingAmountThatMemberDepositIsWorth
             );
 
-        // withdrawalResolution.amountToSendToTreasury = withdrawalResolution
-        //     .amountToSendToTreasury
-        //     .add(totalDeductible);
+    
 
         if (withdrawalResolution.amountToSendToTreasury > 0) {
             _busd.approve(
@@ -1560,7 +1558,8 @@ contract XendFinanceGroup_Yearn_V1 is
         CycleFinancial memory cycleFinancial;
         (cycle, cycleFinancial) = _endCycle(cycleId);
         _updateCycle(cycle);
-        _updateCycleFinancials(cycleFinancial);    }
+        _updateCycleFinancials(cycleFinancial);  
+    }
 
 
     function createGroup(string calldata name, string calldata symbol)
