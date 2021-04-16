@@ -1556,8 +1556,11 @@ contract XendFinanceGroup_Yearn_V1 is
     }
 
     function endCycle(uint256 cycleId) external onlyNonDeprecatedCalls {
-        _endCycle(cycleId);
-    }
+        Cycle memory cycle;
+        CycleFinancial memory cycleFinancial;
+        (cycle, cycleFinancial) = _endCycle(cycleId);
+        _updateCycle(cycle);
+        _updateCycleFinancials(cycleFinancial);    }
 
 
     function createGroup(string calldata name, string calldata symbol)
