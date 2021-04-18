@@ -15,8 +15,7 @@ import "./IERC20.sol";
 // import "./Address.sol";
 import "./IRewardConfig.sol";
 import "./SafeMath.sol";
-import "./IXendToken.sol";
-
+import "./IRewardBridge.sol";
 contract XendFinanceGroupContainer_Yearn_V1 is IGroupSchema {
     struct CycleDepositResult {
         Group group;
@@ -84,7 +83,7 @@ contract XendFinanceGroupContainer_Yearn_V1 is IGroupSchema {
     ITreasury treasury;
     ISavingsConfig savingsConfig;
     IRewardConfig rewardConfig;
-    IXendToken xendToken;
+    IRewardBridge rewardBridge;
     IVBUSD derivativeToken;
 
     address LendingAdapterAddress;
@@ -864,6 +863,8 @@ contract XendFinanceGroup_Yearn_V1 is
     using SafeERC20 for IVBUSD;
 
     using Address for address payable;
+    using Address for address;
+
 
     constructor(
         address lendingServiceAddress,
@@ -873,7 +874,7 @@ contract XendFinanceGroup_Yearn_V1 is
         address treasuryAddress,
         address savingsConfigAddress,
         address rewardConfigAddress,
-        address xendTokenAddress,
+        address rewardBridgeAddress,
         address derivativeTokenAddress
     ) public {
         lendingService = IVenusLendingService(lendingServiceAddress);
@@ -883,7 +884,7 @@ contract XendFinanceGroup_Yearn_V1 is
         treasury = ITreasury(treasuryAddress);
         savingsConfig = ISavingsConfig(savingsConfigAddress);
         rewardConfig = IRewardConfig(rewardConfigAddress);
-        xendToken = IXendToken(xendTokenAddress);
+        rewardBridge = IRewardBridge(rewardBridgeAddress);
         derivativeToken = IVBUSD(derivativeTokenAddress);
         TokenAddress = tokenAddress;
         TreasuryAddress = treasuryAddress;
@@ -899,6 +900,12 @@ contract XendFinanceGroup_Yearn_V1 is
 
     function setAdapterAddress() external onlyOwner {
         LendingAdapterAddress = lendingService.GetVenusLendingAdapterAddress();
+    }
+
+    function updateRewardBridgeAddress(address newRewardBridgeAddress) external onlyOwner{
+        require(newRewardBridgeAddress!=address(0x0),"Invalid address");
+        require(newRewardBridgeAddress.isContract(),"Invalid contract address");
+        rewardBridge = IRewardBridge(newRewardBridgeAddress);
     }
 
     function GetTotalTokenRewardDistributed() external view returns (uint256) {
@@ -984,9 +991,7 @@ contract XendFinanceGroup_Yearn_V1 is
                 underlyingAmountThatMemberDepositIsWorth
             );
 
-        // withdrawalResolution.amountToSendToTreasury = withdrawalResolution
-        //     .amountToSendToTreasury
-        //     .add(totalDeductible);
+    
 
         if (withdrawalResolution.amountToSendToTreasury > 0) {
             _busd.approve(
@@ -1254,7 +1259,7 @@ contract XendFinanceGroup_Yearn_V1 is
             );
 
         if (numberOfRewardTokens > 0) {
-            xendToken.mint(cycleMemberAddress, numberOfRewardTokens);
+            rewardBridge.rewardUser(numberOfRewardTokens,cycleMemberAddress);
             groupStorage.setXendTokensReward(
                 cycleMemberAddress,
                 numberOfRewardTokens
@@ -1549,7 +1554,11 @@ contract XendFinanceGroup_Yearn_V1 is
     }
 
     function endCycle(uint256 cycleId) external onlyNonDeprecatedCalls {
-        _endCycle(cycleId);
+        Cycle memory cycle;
+        CycleFinancial memory cycleFinancial;
+        (cycle, cycleFinancial) = _endCycle(cycleId);
+        _updateCycle(cycle);
+        _updateCycleFinancials(cycleFinancial);  
     }
 
 

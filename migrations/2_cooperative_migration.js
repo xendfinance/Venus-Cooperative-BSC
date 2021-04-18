@@ -16,6 +16,8 @@ const EsusuAdapterContract = artifacts.require('EsusuAdapter');
 const EsusuAdapterWithdrawalDelegateContract = artifacts.require('EsusuAdapterWithdrawalDelegate');
 const EsusuStorageContract = artifacts.require('EsusuStorage');
 const XendFinanceGroup = artifacts.require("XendFinanceGroup_Yearn_V1.sol");
+const RewardBridgeContract = artifacts.require('RewardBridge');
+
 // const web3 = new Web3("HTTP://127.0.0.1:8545");
 // const daiContract = new web3.eth.Contract(DaiContractABI, DaiContractAddress);
 
@@ -61,8 +63,11 @@ module.exports = function (deployer) {
 
     console.log("Xend Token Contract address", XendTokenContract.address);
 
-    await deployer.deploy(VenusLendingService);
 
+    await deployer.deploy(RewardBridgeContract, XendTokenContract.address);
+    console.log("Reward Bridge Contract address", RewardBridgeContract.address);
+
+    await deployer.deploy(VenusLendingService);
     console.log(
       "venusLendingService Contract address: " + VenusLendingService.address
     );
