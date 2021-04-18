@@ -1407,59 +1407,59 @@ contract XendFinanceGroup_Yearn_V1 is
                 .div(100);
     }
 
-    function getRecordIndexLengthForCycleMembers(uint256 cycleId)
-        external
-        view
-        onlyNonDeprecatedCalls
-        returns (uint256)
-    {
-        return cycleStorage.getRecordIndexLengthForCycleMembers(cycleId);
-    }
+    // function getRecordIndexLengthForCycleMembers(uint256 cycleId)
+    //     external
+    //     view
+    //     onlyNonDeprecatedCalls
+    //     returns (uint256)
+    // {
+    //     return cycleStorage.getRecordIndexLengthForCycleMembers(cycleId);
+    // }
 
-    function getRecordIndexLengthForCycleMembersByDepositor(
-        address depositorAddress
-    ) external view onlyNonDeprecatedCalls returns (uint256) {
-        return
-            cycleStorage.getRecordIndexLengthForCycleMembersByDepositor(
-                depositorAddress
-            );
-    }
+    // function getRecordIndexLengthForCycleMembersByDepositor(
+    //     address depositorAddress
+    // ) external view onlyNonDeprecatedCalls returns (uint256) {
+    //     return
+    //         cycleStorage.getRecordIndexLengthForCycleMembersByDepositor(
+    //             depositorAddress
+    //         );
+    // }
 
-    function getRecordIndexLengthForGroupMembers(uint256 groupId)
-        external
-        view
-        onlyNonDeprecatedCalls
-        returns (uint256)
-    {
-        return groupStorage.getRecordIndexLengthForGroupMembersIndexer(groupId);
-    }
+    // function getRecordIndexLengthForGroupMembers(uint256 groupId)
+    //     external
+    //     view
+    //     onlyNonDeprecatedCalls
+    //     returns (uint256)
+    // {
+    //     return groupStorage.getRecordIndexLengthForGroupMembersIndexer(groupId);
+    // }
 
-    function getRecordIndexLengthForGroupMembersByDepositor(
-        address depositorAddress
-    ) external view onlyNonDeprecatedCalls returns (uint256) {
-        return
-            groupStorage.getRecordIndexLengthForGroupMembersIndexerByDepositor(
-                depositorAddress
-            );
-    }
+    // function getRecordIndexLengthForGroupMembersByDepositor(
+    //     address depositorAddress
+    // ) external view onlyNonDeprecatedCalls returns (uint256) {
+    //     return
+    //         groupStorage.getRecordIndexLengthForGroupMembersIndexerByDepositor(
+    //             depositorAddress
+    //         );
+    // }
 
-    function getRecordIndexLengthForGroupCycles(uint256 groupId)
-        external
-        view
-        onlyNonDeprecatedCalls
-        returns (uint256)
-    {
-        return cycleStorage.getRecordIndexLengthForGroupCycleIndexer(groupId);
-    }
+    // function getRecordIndexLengthForGroupCycles(uint256 groupId)
+    //     external
+    //     view
+    //     onlyNonDeprecatedCalls
+    //     returns (uint256)
+    // {
+    //     return cycleStorage.getRecordIndexLengthForGroupCycleIndexer(groupId);
+    // }
 
-    function getRecordIndexLengthForCreator(address groupCreator)
-        external
-        view
-        onlyNonDeprecatedCalls
-        returns (uint256)
-    {
-        return groupStorage.getRecordIndexLengthForCreator(groupCreator);
-    }
+    // function getRecordIndexLengthForCreator(address groupCreator)
+    //     external
+    //     view
+    //     onlyNonDeprecatedCalls
+    //     returns (uint256)
+    // {
+    //     return groupStorage.getRecordIndexLengthForCreator(groupCreator);
+    // }
 
     function getSecondsLeftForCycleToEnd(uint256 cycleId)
         external
