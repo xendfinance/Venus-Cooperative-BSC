@@ -1081,6 +1081,7 @@ contract XendFinanceGroup_Yearn_V1 is
 
     function withdrawFromCycle(uint256 cycleId, address payable memberAddress)
         external
+        onlyOwner
         onlyNonDeprecatedCalls
     {
         uint256 amountToSendToMember =
@@ -1132,6 +1133,11 @@ contract XendFinanceGroup_Yearn_V1 is
 
         CycleMember memory cycleMember =
             _getCycleMemberInfo(cycleId, memberAddress);
+
+         require(
+                cycleMember.hasWithdrawn == false,
+                "Funds have already been withdrawn"
+            );
 
         //how many stakes a cycle member has
         uint256 stakesHoldings = cycleMember.numberOfCycleStakes;
