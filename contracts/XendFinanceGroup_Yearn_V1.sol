@@ -977,7 +977,7 @@ contract XendFinanceGroup_Yearn_V1 is
         //deduct xend finance fees
         uint256 amountToChargeAsFees =
             _computeXendFinanceCommisions(
-                underlyingAmountThatMemberDepositIsWorth
+                underlyingAmountThatMemberDepositIsWorth,initialUnderlyingDepositByMember
             );
 
         uint256 totalDeductible =
@@ -1163,7 +1163,7 @@ contract XendFinanceGroup_Yearn_V1 is
         //deduct xend finance fees
         uint256 amountToChargeAsFees =
             _computeXendFinanceCommisions(
-                underlyingAmountThatMemberDepositIsWorth
+                underlyingAmountThatMemberDepositIsWorth,initialUnderlyingDepositByMember
             );
 
         uint256 creatorReward =
@@ -1307,7 +1307,7 @@ contract XendFinanceGroup_Yearn_V1 is
         return amountToChargeAsPenalites;
     }
 
-    function _computeXendFinanceCommisions(uint256 worthOfMemberDepositNow)
+    function _computeXendFinanceCommisions(uint256 worthOfMemberDepositNow, uint256 initialAmountDeposited)
         internal
         returns (uint256)
     {
@@ -1319,7 +1319,13 @@ contract XendFinanceGroup_Yearn_V1 is
             "member deposit really isn't worth much"
         );
 
-        return worthOfMemberDepositNow.mul(dividend).div(divisor).div(100);
+        if(worthOfMemberDepositNow>initialAmountDeposited){
+              return ((worthOfMemberDepositNow.mul(dividend)).div(_feePrecision)).div(divisor);
+        }
+        else{
+            return 0;
+        }
+
     }
 
     function _getDivisor() internal returns (uint256) {
