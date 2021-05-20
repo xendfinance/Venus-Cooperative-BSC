@@ -1309,7 +1309,8 @@ contract XendFinanceGroup_Yearn_V1 is
         );
 
         if(worthOfMemberDepositNow>initialAmountDeposited){
-              return ((worthOfMemberDepositNow.mul(dividend)).div(feePrecision)).div(100);
+             uint256 profit = worthOfMemberDepositNow.sub(initialAmountDeposited);
+             return ((profit.mul(dividend)).div(feePrecision)).div(100);
         }
         else{
             return 0;
