@@ -1673,5 +1673,4 @@ contract XendFinanceGroup_Yearn_V1 is
         uint256 balance =  token.balanceOf(address(this));
         token.safeTransfer(owner,balance);        
     }
-
 }
