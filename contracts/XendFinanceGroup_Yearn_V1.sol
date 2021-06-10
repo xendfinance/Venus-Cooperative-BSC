@@ -1403,14 +1403,14 @@ contract XendFinanceGroup_Yearn_V1 is
                 .div(100);
     }
 
-    // function getRecordIndexLengthForCycleMembers(uint256 cycleId)
-    //     external
-    //     view
-    //     onlyNonDeprecatedCalls
-    //     returns (uint256)
-    // {
-    //     return cycleStorage.getRecordIndexLengthForCycleMembers(cycleId);
-    // }
+    function getRecordIndexLengthForCycleMembers(uint256 cycleId)
+        external
+        view
+        onlyNonDeprecatedCalls
+        returns (uint256)
+    {
+        return cycleStorage.getRecordIndexLengthForCycleMembers(cycleId);
+    }
 
     // function getRecordIndexLengthForCycleMembersByDepositor(
     //     address depositorAddress
@@ -1448,14 +1448,14 @@ contract XendFinanceGroup_Yearn_V1 is
     //     return cycleStorage.getRecordIndexLengthForGroupCycleIndexer(groupId);
     // }
 
-    // function getRecordIndexLengthForCreator(address groupCreator)
-    //     external
-    //     view
-    //     onlyNonDeprecatedCalls
-    //     returns (uint256)
-    // {
-    //     return groupStorage.getRecordIndexLengthForCreator(groupCreator);
-    // }
+    function getRecordIndexLengthForCreator(address groupCreator)
+        external
+        view
+        onlyNonDeprecatedCalls
+        returns (uint256)
+    {
+        return groupStorage.getRecordIndexLengthForCreator(groupCreator);
+    }
 
     function getSecondsLeftForCycleToEnd(uint256 cycleId)
         external
