@@ -68,7 +68,7 @@ contract("RewardBridge", () => {
 
     await rewardBridgeInstance.grantAccess(accounts[0]);
 
-    await rewardBridgeInstance.rewardUser(rewardAmount,rewardRecipient);
+    await rewardBridgeInstance.rewardUser(rewardAmount.toString(),rewardRecipient);
 
     let currentTokenBalanceForbridge = await rewardTokenInstance.balanceOf(rewardBridgeInstance.address);
     let currentTokenbalanceForRecipient = await rewardTokenInstance.balanceOf(rewardBridgeInstance.address);

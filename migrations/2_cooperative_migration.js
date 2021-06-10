@@ -142,6 +142,17 @@ module.exports = function (deployer) {
     groupsContract = await GroupsContract.deployed();
     xendGroup = await XendFinanceGroup.deployed();
 
+
+    await savingsConfigContract.createRule("XEND_FEE_PRECISION",0,0,100,1);
+
+    await savingsConfigContract.createRule("PERCENTAGE_AS_PENALTY",0,0,10,1);
+
+    await savingsConfigContract.createRule("PERCENTAGE_PAYOUT_TO_USERS",0,0,150,1);
+
+    await savingsConfigContract.createRule("XEND_FINANCE_COMMISION_DIVIDEND",0,0,200,1);
+    await savingsConfigContract.createRule("XEND_FINANCE_COMMISION_FLEXIBLE_DIVIDEND",0,0,1,1);
+
+
    
    
 

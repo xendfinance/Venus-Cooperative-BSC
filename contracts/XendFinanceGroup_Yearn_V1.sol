@@ -94,15 +94,15 @@ contract XendFinanceGroupContainer_Yearn_V1 is IGroupSchema {
 
     uint256 _groupCreatorRewardPercent;
 
-    uint256 _feePrecision = 10; //  This determines the lower limit of the fee to be charged. With precsion of 10, it means our fee can have a precision of 0.1% and above
 
     string constant PERCENTAGE_PAYOUT_TO_USERS = "PERCENTAGE_PAYOUT_TO_USERS";
     string constant PERCENTAGE_AS_PENALTY = "PERCENTAGE_AS_PENALTY";
 
-    string constant XEND_FINANCE_COMMISION_DIVISOR =
-        "XEND_FINANCE_COMMISION_DIVISOR";
     string constant XEND_FINANCE_COMMISION_DIVIDEND =
         "XEND_FINANCE_COMMISION_DIVIDEND";
+    
+    string XEND_FEE_PRECISION = "XEND_FEE_PRECISION";
+
 
     bool isDeprecated;
 
@@ -894,10 +894,6 @@ contract XendFinanceGroup_Yearn_V1 is
         _groupCreatorRewardPercent = percent;
     }
 
-    function UpdateFeePrecision(uint256 feePrecision) external onlyOwner {
-        _feePrecision = feePrecision;
-    }
-
     function setAdapterAddress() external onlyOwner {
         LendingAdapterAddress = lendingService.GetVenusLendingAdapterAddress();
     }
@@ -974,16 +970,9 @@ contract XendFinanceGroup_Yearn_V1 is
                 underlyingAmountThatMemberDepositIsWorth
             );
 
-        //deduct xend finance fees
-        uint256 amountToChargeAsFees =
-            _computeXendFinanceCommisions(
-                underlyingAmountThatMemberDepositIsWorth
-            );
+       
 
-        uint256 totalDeductible =
-            amountToChargeAsPenalites.add(amountToChargeAsFees);
-
-        underlyingAmountThatMemberDepositIsWorth.sub(totalDeductible);
+        underlyingAmountThatMemberDepositIsWorth = underlyingAmountThatMemberDepositIsWorth.sub(amountToChargeAsPenalites);
 
         WithdrawalResolution memory withdrawalResolution =
             _computeAmountToSendToParties(
@@ -1081,6 +1070,7 @@ contract XendFinanceGroup_Yearn_V1 is
 
     function withdrawFromCycle(uint256 cycleId, address payable memberAddress)
         external
+        onlyOwner
         onlyNonDeprecatedCalls
     {
         uint256 amountToSendToMember =
@@ -1133,6 +1123,11 @@ contract XendFinanceGroup_Yearn_V1 is
         CycleMember memory cycleMember =
             _getCycleMemberInfo(cycleId, memberAddress);
 
+         require(
+                cycleMember.hasWithdrawn == false,
+                "Funds have already been withdrawn"
+            );
+
         //how many stakes a cycle member has
         uint256 stakesHoldings = cycleMember.numberOfCycleStakes;
 
@@ -1157,12 +1152,12 @@ contract XendFinanceGroup_Yearn_V1 is
         //deduct xend finance fees
         uint256 amountToChargeAsFees =
             _computeXendFinanceCommisions(
-                underlyingAmountThatMemberDepositIsWorth
+                underlyingAmountThatMemberDepositIsWorth,initialUnderlyingDepositByMember
             );
 
         uint256 creatorReward =
             amountToChargeAsFees.mul(_groupCreatorRewardPercent).div(
-                _feePrecision.mul(100)
+                _getFeePrecision().mul(100)
             );
 
         uint256 finalAmountToChargeAsFees =
@@ -1301,37 +1296,38 @@ contract XendFinanceGroup_Yearn_V1 is
         return amountToChargeAsPenalites;
     }
 
-    function _computeXendFinanceCommisions(uint256 worthOfMemberDepositNow)
+    function _computeXendFinanceCommisions(uint256 worthOfMemberDepositNow, uint256 initialAmountDeposited)
         internal
         returns (uint256)
     {
         uint256 dividend = _getDividend();
-        uint256 divisor = _getDivisor();
+        uint256 feePrecision = _getFeePrecision();
 
         require(
             worthOfMemberDepositNow > 0,
             "member deposit really isn't worth much"
         );
 
-        return worthOfMemberDepositNow.mul(dividend).div(divisor).div(100);
+        if(worthOfMemberDepositNow>initialAmountDeposited){
+             uint256 profit = worthOfMemberDepositNow.sub(initialAmountDeposited);
+             return ((profit.mul(dividend)).div(feePrecision)).div(100);
+        }
+        else{
+            return 0;
+        }
+
     }
 
-    function _getDivisor() internal returns (uint256) {
-        (
-            uint256 minimumDivisor,
-            uint256 maximumDivisor,
-            uint256 exactDivisor,
-            bool appliesDivisor,
-            RuleDefinition ruleDefinitionDivisor
-        ) = savingsConfig.getRuleSet(XEND_FINANCE_COMMISION_DIVISOR);
+   function _getFeePrecision() internal returns (uint256) {
+        (,,uint256 feePrecision,bool appliesDividend,RuleDefinition ruleDefinition) = savingsConfig.getRuleSet(XEND_FEE_PRECISION);
 
-        require(appliesDivisor, "unsupported rule defintion");
+        require(appliesDividend, "unsupported rule defintion for rule set");
 
         require(
-            ruleDefinitionDivisor == RuleDefinition.VALUE,
-            "unsupported rule defintion for percentage"
+            ruleDefinition == RuleDefinition.VALUE,
+            "unsupported rule defintion for fee precision"
         );
-        return exactDivisor;
+        return feePrecision;
     }
 
     function _getDividend() internal returns (uint256) {
@@ -1416,41 +1412,41 @@ contract XendFinanceGroup_Yearn_V1 is
         return cycleStorage.getRecordIndexLengthForCycleMembers(cycleId);
     }
 
-    function getRecordIndexLengthForCycleMembersByDepositor(
-        address depositorAddress
-    ) external view onlyNonDeprecatedCalls returns (uint256) {
-        return
-            cycleStorage.getRecordIndexLengthForCycleMembersByDepositor(
-                depositorAddress
-            );
-    }
+    // function getRecordIndexLengthForCycleMembersByDepositor(
+    //     address depositorAddress
+    // ) external view onlyNonDeprecatedCalls returns (uint256) {
+    //     return
+    //         cycleStorage.getRecordIndexLengthForCycleMembersByDepositor(
+    //             depositorAddress
+    //         );
+    // }
 
-    function getRecordIndexLengthForGroupMembers(uint256 groupId)
-        external
-        view
-        onlyNonDeprecatedCalls
-        returns (uint256)
-    {
-        return groupStorage.getRecordIndexLengthForGroupMembersIndexer(groupId);
-    }
+    // function getRecordIndexLengthForGroupMembers(uint256 groupId)
+    //     external
+    //     view
+    //     onlyNonDeprecatedCalls
+    //     returns (uint256)
+    // {
+    //     return groupStorage.getRecordIndexLengthForGroupMembersIndexer(groupId);
+    // }
 
-    function getRecordIndexLengthForGroupMembersByDepositor(
-        address depositorAddress
-    ) external view onlyNonDeprecatedCalls returns (uint256) {
-        return
-            groupStorage.getRecordIndexLengthForGroupMembersIndexerByDepositor(
-                depositorAddress
-            );
-    }
+    // function getRecordIndexLengthForGroupMembersByDepositor(
+    //     address depositorAddress
+    // ) external view onlyNonDeprecatedCalls returns (uint256) {
+    //     return
+    //         groupStorage.getRecordIndexLengthForGroupMembersIndexerByDepositor(
+    //             depositorAddress
+    //         );
+    // }
 
-    function getRecordIndexLengthForGroupCycles(uint256 groupId)
-        external
-        view
-        onlyNonDeprecatedCalls
-        returns (uint256)
-    {
-        return cycleStorage.getRecordIndexLengthForGroupCycleIndexer(groupId);
-    }
+    // function getRecordIndexLengthForGroupCycles(uint256 groupId)
+    //     external
+    //     view
+    //     onlyNonDeprecatedCalls
+    //     returns (uint256)
+    // {
+    //     return cycleStorage.getRecordIndexLengthForGroupCycleIndexer(groupId);
+    // }
 
     function getRecordIndexLengthForCreator(address groupCreator)
         external

@@ -30,7 +30,7 @@ const busdAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56";
 
 const daiContract = new web3.eth.Contract(DaiContractABI, busdAddress);
 
-const unlockedAddress = "0x631fc1ea2270e98fbd9d92658ece0f5a269aa161";
+const unlockedAddress = "0xEfB826Ab5D566DB9d5Af50e17B0cEc5A60c18AA3";
 
 const EsusuAdapterContract = artifacts.require('EsusuAdapter');
 const EsusuAdapterWithdrawalDelegateContract = artifacts.require('EsusuAdapterWithdrawalDelegate');
@@ -273,7 +273,7 @@ contract("XendFinanceGroup_Yearn_v1", () => {
       duration,
       maximumSlots,
       hasMaximumSlots,
-      cycleStakeAmount, {from:account2}
+      cycleStakeAmount.toString(), {from:account2}
     );
     assert(cycleResult.receipt.status == true);
     //console.log(cycleResult.receipt.status, "cycle result");
